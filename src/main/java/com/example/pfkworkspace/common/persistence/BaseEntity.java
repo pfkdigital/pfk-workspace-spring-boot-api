@@ -11,11 +11,8 @@ import java.util.UUID;
 
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
-@AllArgsConstructor
-@NoArgsConstructor
 @Getter
 @Setter
-@Builder
 public class BaseEntity {
 
     @Id

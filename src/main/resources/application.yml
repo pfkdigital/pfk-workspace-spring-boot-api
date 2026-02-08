@@ -75,13 +75,16 @@ pfk:
     jwt:
       issuer: ${JWT_ISSUER:pfk-workspace}
       secret: ${JWT_SECRET:dev-only-change-me}
-      access-token-ttl: ${JWT_ACCESS_TTL:15m}
-      refresh-token-ttl: ${JWT_REFRESH_TTL:30d}
-
+      access-token-ttl: ${JWT_ACCESS_TTL:3600000} # 1 hour
+      refresh-token-ttl: ${JWT_REFRESH_TTL:604800000} # 7 days
+  email:
+    resend:
+        api-key: ${RESEND_API_KEY:}
+        from-email: ${RESEND_FROM_EMAIL:noah@pfkdigital.co.uk}
   auth:
     cookies:
-      access-token-name: ${ACCESS_TOKEN_COOKIE:pfk_access}
-      refresh-token-name: ${REFRESH_TOKEN_COOKIE:pfk_refresh}
+      access-token-name: ${ACCESS_TOKEN_COOKIE:access_token}
+      refresh-token-name: ${REFRESH_TOKEN_COOKIE:refresh_token}
       secure: ${COOKIE_SECURE:false}
       same-site: ${COOKIE_SAMESITE:LAX} # LAX for local; NONE for cross-site HTTPS
       domain: ${COOKIE_DOMAIN:}

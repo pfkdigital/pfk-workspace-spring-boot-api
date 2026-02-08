@@ -2,17 +2,21 @@ package com.example.pfkworkspace.modules.user.domain;
 
 import com.example.pfkworkspace.common.persistence.BaseEntity;
 import jakarta.persistence.*;
+import java.time.Instant;
+import java.util.Collection;
+import java.util.Set;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.time.Instant;
-import java.util.Collection;
-import java.util.Set;
-
 @Entity
 @Table(name = "users")
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
 public class User extends BaseEntity implements UserDetails {
 
     @Column(unique = true, nullable = false)
@@ -64,7 +68,7 @@ public class User extends BaseEntity implements UserDetails {
 
     @Override
     public String getUsername() {
-        return email;
+        return username ;
     }
 
     @Override

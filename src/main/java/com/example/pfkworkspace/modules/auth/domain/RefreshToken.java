@@ -3,6 +3,7 @@ package com.example.pfkworkspace.modules.auth.domain;
 import com.example.pfkworkspace.common.persistence.BaseEntity;
 import com.example.pfkworkspace.modules.user.domain.User;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -17,6 +18,11 @@ import java.util.UUID;
     uniqueConstraints = {
       @UniqueConstraint(name = "uk_refresh_tokens_token_hash", columnNames = "token_hash")
     })
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class RefreshToken extends BaseEntity {
 
   @Column(name = "user_id", nullable = false, columnDefinition = "uuid")

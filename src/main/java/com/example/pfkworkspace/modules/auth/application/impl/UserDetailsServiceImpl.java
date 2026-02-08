@@ -1,4 +1,4 @@
-package com.example.pfkworkspace.modules.auth.application;
+package com.example.pfkworkspace.modules.auth.application.impl;
 
 import com.example.pfkworkspace.modules.user.infrastructure.repo.UserRepository;
 import lombok.RequiredArgsConstructor;
