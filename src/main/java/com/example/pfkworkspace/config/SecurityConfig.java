@@ -1,6 +1,7 @@
 package com.example.pfkworkspace.config;
 
 import com.example.pfkworkspace.modules.auth.application.impl.UserDetailsServiceImpl;
+import com.example.pfkworkspace.modules.auth.infrastructure.CustomLogoutHandler;
 import com.example.pfkworkspace.modules.auth.infrastructure.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ public class SecurityConfig {
   private final JwtAuthFilter jwtAuthFilter;
   private final PasswordEncoder passwordEncoder;
   private final UserDetailsServiceImpl userDetailsService;
+  private final CustomLogoutHandler customLogoutHandler;
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -43,6 +45,7 @@ public class SecurityConfig {
         .authenticationProvider(authenticationProvider())
         .exceptionHandling(
             e -> e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+            .logout(logout -> logout.logoutUrl("/api/v1/auth/logout").logoutSuccessHandler(customLogoutHandler))
         .build();
   }
 

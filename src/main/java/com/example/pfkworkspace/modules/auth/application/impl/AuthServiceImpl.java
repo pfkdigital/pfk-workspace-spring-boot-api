@@ -11,6 +11,7 @@ import com.example.pfkworkspace.modules.auth.infrastructure.repo.EmailVerificati
 import com.example.pfkworkspace.modules.auth.infrastructure.repo.RefreshTokenRepository;
 import com.example.pfkworkspace.modules.user.domain.User;
 import com.example.pfkworkspace.modules.user.infrastructure.repo.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseCookie;
@@ -25,7 +26,6 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HexFormat;
-
 
 @Service
 @RequiredArgsConstructor
@@ -83,8 +83,9 @@ public class AuthServiceImpl implements AuthService {
             .findByTokenHash(tokenHash)
             .orElseThrow(() -> new IllegalArgumentException("Invalid verification token"));
 
-    if (verificationToken.isUsed() || verificationToken.getExpiresAt().isBefore(java.time.Instant.now())) {
-        throw new IllegalArgumentException("Verification token has expired");
+    if (verificationToken.isUsed()
+        || verificationToken.getExpiresAt().isBefore(java.time.Instant.now())) {
+      throw new IllegalArgumentException("Verification token has expired");
     }
 
     // Mark the user's email as verified and save the user
@@ -108,10 +109,11 @@ public class AuthServiceImpl implements AuthService {
   }
 
   @Override
-  public AuthenticateResponseDto authenticate(AuthenticateRequestDto requestDto, HttpServletResponse response) {
-    Authentication auth = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(requestDto.username(), requestDto.password())
-    );
+  public AuthenticateResponseDto authenticate(
+      AuthenticateRequestDto requestDto, HttpServletResponse response) {
+    Authentication auth =
+        authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(requestDto.username(), requestDto.password()));
 
     User user = (User) auth.getPrincipal();
     user.setLastLoginAt(Instant.now());
@@ -119,7 +121,8 @@ public class AuthServiceImpl implements AuthService {
 
     String jwtToken = jwtUtility.generateAccessToken(user);
     String refreshToken = jwtUtility.generateRefreshToken(user);
-    RefreshToken refreshTokenEntity = RefreshToken.builder()
+    RefreshToken refreshTokenEntity =
+        RefreshToken.builder()
             .tokenHash(sha256Hash(refreshToken))
             .user(user)
             .user_id(user.getId())
@@ -129,9 +132,40 @@ public class AuthServiceImpl implements AuthService {
 
     addCookiesToResponse(response, jwtToken, refreshToken);
 
-    return AuthenticateResponseDto.builder()
-            .message("Authenticated successfully")
-            .build();
+    return AuthenticateResponseDto.builder().message("Authenticated successfully").build();
+  }
+
+  @Override
+  public RefreshResponseDto refresh(HttpServletRequest request, HttpServletResponse response) {
+    String token = cookieUtil.getCookie(request, "refresh_token");
+    if (token == null) {
+      throw new IllegalArgumentException("Refresh token is missing");
+    }
+
+    RefreshToken refreshToken =
+        refreshTokenRepository
+            .findByTokenHash(sha256Hash(token))
+            .orElseThrow(() -> new IllegalArgumentException("Invalid refresh token"));
+
+    if (refreshToken.isRevoked()) {
+      throw new IllegalArgumentException("Refresh token has been revoked");
+    }
+
+    String username = jwtUtility.extractUsername(token);
+    User user =
+        userRepository
+            .findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+    if (!jwtUtility.isTokenValid(token, user)) {
+      throw new IllegalArgumentException("Invalid refresh token");
+    }
+
+    String newJwtToken = jwtUtility.generateAccessToken(user);
+
+    addCookiesToResponse(response, newJwtToken, token);
+
+    return RefreshResponseDto.builder().message("Token refreshed successfully").build();
   }
 
   private User createNewUser(RegisterRequestDto registrationRequestDto) {
@@ -154,7 +188,8 @@ public class AuthServiceImpl implements AuthService {
     }
   }
 
-  private void addCookiesToResponse(HttpServletResponse response, String jwtToken, String refreshToken) {
+  private void addCookiesToResponse(
+      HttpServletResponse response, String jwtToken, String refreshToken) {
     ResponseCookie accessTokenCookie = cookieUtil.createAccessTokenCookie(jwtToken);
     ResponseCookie refreshTokenCookie = cookieUtil.createRefreshTokenCookie(refreshToken);
     response.addHeader("Set-Cookie", accessTokenCookie.toString());

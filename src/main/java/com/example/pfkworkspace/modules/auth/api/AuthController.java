@@ -3,6 +3,7 @@ package com.example.pfkworkspace.modules.auth.api;
 import com.example.pfkworkspace.modules.auth.api.dto.AuthenticateRequestDto;
 import com.example.pfkworkspace.modules.auth.api.dto.RegisterRequestDto;
 import com.example.pfkworkspace.modules.auth.application.impl.AuthServiceImpl;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,7 +28,13 @@ public class AuthController {
   }
 
   @PostMapping("/authenticate")
-  public ResponseEntity<?> authenticate(@RequestBody AuthenticateRequestDto requestDto, HttpServletResponse response) {
+  public ResponseEntity<?> authenticate(
+      @RequestBody AuthenticateRequestDto requestDto, HttpServletResponse response) {
     return new ResponseEntity<>(authService.authenticate(requestDto, response), HttpStatus.OK);
+  }
+
+  @PostMapping("/refresh")
+  public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response) {
+    return new ResponseEntity<>(authService.refresh(request, response), HttpStatus.OK);
   }
 }

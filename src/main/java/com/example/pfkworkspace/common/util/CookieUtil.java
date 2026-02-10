@@ -2,6 +2,7 @@ package com.example.pfkworkspace.common.util;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
@@ -46,11 +47,11 @@ public class CookieUtil {
                 .orElse(null);
     }
 
-    public Cookie deleteCookie(String name, String path) {
+    public void deleteCookie(HttpServletResponse response, String name) {
         Cookie cookie = new Cookie(name, "");
         cookie.setPath(path == null ? "/" : path);
         cookie.setMaxAge(0);
-        return cookie;
+        response.addCookie(cookie);
     }
 
     public ResponseCookie createAccessTokenCookie(String token) {

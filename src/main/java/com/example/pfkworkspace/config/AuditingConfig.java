@@ -10,9 +10,8 @@ import java.util.UUID;
 @Configuration
 public class AuditingConfig {
 
-    @Bean
-    public AuditorAware<UUID> auditorAware(CurrentUserIdProvider currentUserIdProvider) {
-        return () -> Optional.ofNullable(currentUserIdProvider.getCurrentUserId());
+  @Bean
+  public AuditorAware<UUID> auditorAware(CurrentUserIdProvider currentUserIdProvider) {
+    return () -> Optional.ofNullable(currentUserIdProvider.getCurrentUserId());
     }
-
 }
