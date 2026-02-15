@@ -3,6 +3,7 @@ package com.example.pfkworkspace.modules.auth.domain;
 import com.example.pfkworkspace.common.persistence.BaseEntity;
 import com.example.pfkworkspace.modules.user.domain.User;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -13,6 +14,11 @@ import java.util.UUID;
     indexes = {
       @Index(name = "idx_password_reset_tokens_user_id", columnList = "user_id"),
     })
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@Getter
+@Setter
 public class PasswordResetToken extends BaseEntity {
   @Column(name = "user_id", nullable = false, columnDefinition = "uuid")
   private UUID userId;

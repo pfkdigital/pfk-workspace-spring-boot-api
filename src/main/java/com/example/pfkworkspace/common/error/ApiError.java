@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.http.HttpStatus;
 
 import java.time.Instant;
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -16,4 +17,5 @@ public class ApiError {
     private HttpStatus status;
     private String message;
     private Instant timestamp;
+    private List<String> errors;
 }

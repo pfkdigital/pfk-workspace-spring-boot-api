@@ -63,7 +63,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     } catch (Exception e) {
       log.error("JWT filter error: {}", e.getMessage(), e);
     }
-
     filterChain.doFilter(request, response);
   }
 }

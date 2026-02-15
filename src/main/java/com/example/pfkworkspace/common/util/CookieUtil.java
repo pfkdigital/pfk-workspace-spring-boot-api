@@ -62,6 +62,14 @@ public class CookieUtil {
         return createCookie(cookieRefreshTokenName, token, refreshTokenExpirationMs);
     }
 
+    public void deleteAccessTokenCookie(HttpServletResponse response) {
+        deleteCookie(response, cookieAccessTokenName);
+    }
+
+    public void deleteRefreshTokenCookie(HttpServletResponse response) {
+        deleteCookie(response, cookieRefreshTokenName);
+    }
+
     private ResponseCookie createCookie(String name, String value, Long expirationMs) {
         return ResponseCookie.from(name, value)
                 .httpOnly(true)

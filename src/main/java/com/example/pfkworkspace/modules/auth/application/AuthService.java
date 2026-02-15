@@ -10,4 +10,7 @@ public interface AuthService {
     VerifyResponseDto verify(String token);
     AuthenticateResponseDto authenticate(AuthenticateRequestDto requestDto, HttpServletResponse response);
     RefreshResponseDto refresh(HttpServletRequest request, HttpServletResponse response);
+    CurrentUserResponseDto getCurrentUser();
+    ForgotPasswordResponseDto forgotPassword(ForgotPasswordRequestDto forgotPasswordRequestDto);
+    UpdatePasswordResponseDto updatePassword(UpdatePasswordRequestDto updatePasswordRequestDto, String token, HttpServletResponse response);
 }
