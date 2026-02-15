@@ -1,5 +1,7 @@
 package com.example.pfkworkspace.config;
 
+import com.example.pfkworkspace.common.error.ApiAccessDeniedHandler;
+import com.example.pfkworkspace.common.error.ApiAuthenticationEntryPoint;
 import com.example.pfkworkspace.modules.auth.application.impl.UserDetailsServiceImpl;
 import com.example.pfkworkspace.modules.auth.infrastructure.CustomLogoutHandler;
 import com.example.pfkworkspace.modules.auth.infrastructure.JwtAuthFilter;
@@ -7,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
@@ -18,7 +19,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
@@ -32,6 +32,8 @@ public class SecurityConfig {
   private final PasswordEncoder passwordEncoder;
   private final UserDetailsServiceImpl userDetailsService;
   private final CustomLogoutHandler customLogoutHandler;
+  private final ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
+  private final ApiAccessDeniedHandler apiAccessDeniedHandler;
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -44,7 +46,9 @@ public class SecurityConfig {
         .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
         .authenticationProvider(authenticationProvider())
         .exceptionHandling(
-            e -> e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+            e ->
+                e.authenticationEntryPoint(apiAuthenticationEntryPoint)
+                    .accessDeniedHandler(apiAccessDeniedHandler))
             .logout(logout -> logout.logoutUrl("/api/v1/auth/logout").logoutSuccessHandler(customLogoutHandler))
         .build();
   }
