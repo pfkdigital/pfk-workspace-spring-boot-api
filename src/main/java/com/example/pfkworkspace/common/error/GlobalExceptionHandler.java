@@ -6,6 +6,7 @@ import com.example.pfkworkspace.common.error.ConflictException;
 import com.example.pfkworkspace.common.error.NotFoundException;
 import com.example.pfkworkspace.common.error.UnauthorizedException;
 import com.example.pfkworkspace.modules.auth.api.EmailSendingException;
+import com.example.pfkworkspace.modules.workspace.api.exception.WorkspaceNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import java.time.Instant;
 import java.util.List;
@@ -53,7 +54,8 @@ public class GlobalExceptionHandler {
   }
 
   @ExceptionHandler(MissingServletRequestParameterException.class)
-  public ResponseEntity<ApiResponse> handleMissingParam(MissingServletRequestParameterException ex) {
+  public ResponseEntity<ApiResponse> handleMissingParam(
+      MissingServletRequestParameterException ex) {
     String message = "Missing required parameter: " + ex.getParameterName();
     return buildResponse(HttpStatus.BAD_REQUEST, message);
   }
@@ -107,14 +109,16 @@ public class GlobalExceptionHandler {
   }
 
   @ExceptionHandler(AuthenticationCredentialsNotFoundException.class)
-  public ResponseEntity<ApiResponse> handleAuthRequired(AuthenticationCredentialsNotFoundException ex) {
+  public ResponseEntity<ApiResponse> handleAuthRequired(
+      AuthenticationCredentialsNotFoundException ex) {
     String message = safeMessage(ex.getMessage(), "Authentication is required.");
     return buildResponse(HttpStatus.UNAUTHORIZED, message);
   }
 
   @ExceptionHandler(AccessDeniedException.class)
   public ResponseEntity<ApiResponse> handleAccessDenied(AccessDeniedException ex) {
-    String message = safeMessage(ex.getMessage(), "You do not have permission to perform this action.");
+    String message =
+        safeMessage(ex.getMessage(), "You do not have permission to perform this action.");
     return buildResponse(HttpStatus.FORBIDDEN, message);
   }
 
@@ -122,6 +126,11 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ApiResponse> handleEmailSending(EmailSendingException ex) {
     String message = "Email service is temporarily unavailable. Please try again later.";
     return buildResponse(HttpStatus.BAD_GATEWAY, message);
+  }
+
+  @ExceptionHandler(WorkspaceNotFoundException.class)
+  public ResponseEntity<ApiResponse> handleWorkspaceNotFound(WorkspaceNotFoundException exception) {
+    return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage());
   }
 
   @ExceptionHandler(Exception.class)

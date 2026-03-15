@@ -1,7 +1,7 @@
 package com.example.pfkworkspace.modules.auth.application;
 
 import com.example.pfkworkspace.modules.auth.api.dto.*;
-import com.example.pfkworkspace.modules.auth.domain.RefreshToken;
+import com.example.pfkworkspace.modules.user.domain.User;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 

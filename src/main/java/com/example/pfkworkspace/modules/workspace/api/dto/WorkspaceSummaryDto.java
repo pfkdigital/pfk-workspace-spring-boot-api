@@ -12,11 +12,11 @@ import java.util.UUID;
 @NoArgsConstructor
 @Data
 @Builder
-public class CreateWorkspaceResponseDto {
+public class WorkspaceSummaryDto {
     private UUID id;
     private String name;
     private String description;
     private String imageUrl;
+    private int memberCount;
     private Instant createdAt;
-    private Instant updatedAt;
 }
