@@ -41,4 +41,14 @@ public class Workspace extends BaseEntity {
     workspaceMember.setWorkspace(this);
     workspaceMembers.add(workspaceMember);
   }
+
+  public void addWorkspaceInvitation(WorkspaceInvitation workspaceInvitation) {
+    workspaceInvitation.setWorkspace(this);
+    workspaceInvitations.add(workspaceInvitation);
+  }
+
+  public void removeWorkspaceMember(WorkspaceMember workspaceMember) {
+    workspaceMembers.remove(workspaceMember);
+    workspaceMember.setWorkspace(null);
+  }
 }

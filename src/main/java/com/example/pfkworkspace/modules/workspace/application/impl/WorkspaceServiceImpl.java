@@ -4,6 +4,7 @@ import com.example.pfkworkspace.modules.auth.application.UserContextService;
 import com.example.pfkworkspace.modules.user.domain.User;
 import com.example.pfkworkspace.modules.user.infrastructure.repo.UserRepository;
 import com.example.pfkworkspace.modules.workspace.api.dto.*;
+import com.example.pfkworkspace.modules.workspace.api.exception.WorkspaceMemberNotFoundException;
 import com.example.pfkworkspace.modules.workspace.api.exception.WorkspaceNotFoundException;
 import com.example.pfkworkspace.modules.workspace.application.WorkspaceSecurityService;
 import com.example.pfkworkspace.modules.workspace.application.WorkspaceService;
@@ -144,5 +145,47 @@ public class WorkspaceServiceImpl implements WorkspaceService {
             .orElseThrow(() -> new WorkspaceNotFoundException("Workspace not found with id: " + workspaceId));
 
     workspaceRepository.delete(workspace);
+  }
+
+  @Override
+  @Transactional
+  public void removeUserFromWorkspace(UUID workspaceId, UUID userId) {
+    if(!workspaceSecurityService.isOwnerOrAdmin(workspaceId)) {
+      throw new AuthorizationDeniedException("Only owners and admins are allowed to remove users from a workspace");
+    }
+
+    Workspace workspace = workspaceRepository.findById(workspaceId).orElseThrow(() -> new WorkspaceNotFoundException("Workspace not found with id: " + workspaceId));
+    WorkspaceMember workspaceMember = workspaceMemberRepository.findById(userId).orElseThrow(() -> new WorkspaceMemberNotFoundException("Workspace Member was not found with the id" + userId));
+
+    workspace.removeWorkspaceMember(workspaceMember);
+    workspaceRepository.save(workspace);
+
+    log.info("Workspace Member was successfully removed from the workspace");
+  }
+
+  @Override
+  @Transactional
+  public void updateMemberRole(UUID workspaceId, UUID userId, WorkspaceRole role) {
+    if (!workspaceSecurityService.isOwnerOrAdmin(workspaceId)) {
+      throw new AuthorizationDeniedException(
+          "Only owners and admins are allowed to update user roles in a workspace");
+    }
+
+    if (role == WorkspaceRole.OWNER && !workspaceSecurityService.isOwner(workspaceId)) {
+      throw new AuthorizationDeniedException("Only the owner can appoint a new owner");
+    }
+
+    WorkspaceMember workspaceMember =
+        workspaceMemberRepository
+            .findByUserIdAndWorkspaceId(userId, workspaceId)
+            .orElseThrow(
+                () ->
+                    new WorkspaceMemberNotFoundException(
+                        "Workspace Member was not found with the user id " + userId));
+
+    workspaceMember.setRole(role);
+    workspaceMemberRepository.save(workspaceMember);
+
+    log.info("Workspace Member role was successfully updated to {}", role);
   }
 }

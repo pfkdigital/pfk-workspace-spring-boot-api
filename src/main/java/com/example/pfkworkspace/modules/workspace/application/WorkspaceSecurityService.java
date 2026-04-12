@@ -6,6 +6,8 @@ import java.util.UUID;
 
 public interface WorkspaceSecurityService {
     boolean isOwner(UUID workspaceId);
+    boolean isAdmin(UUID workspaceId);
     boolean isMember(UUID workspaceId);
+    boolean isOwnerOrAdmin(UUID workspaceId);
     boolean hasRole(UUID workspaceId, WorkspaceRole requiredRole);
 }

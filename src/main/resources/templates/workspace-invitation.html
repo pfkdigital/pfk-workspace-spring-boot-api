@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Workspace Invitation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            padding: 30px 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 16px;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        .workspace-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .workspace-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .workspace-role {
+            font-size: 14px;
+            color: #007bff;
+            font-weight: 600;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+            min-width: 120px;
+        }
+
+        .button-accept {
+            background-color: #28a745;
+            color: #ffffff;
+        }
+
+        .button-accept:hover {
+            background-color: #218838;
+        }
+
+        .button-reject {
+            background-color: #dc3545;
+            color: #ffffff;
+        }
+
+        .button-reject:hover {
+            background-color: #c82333;
+        }
+
+        .expiry-note {
+            font-size: 14px;
+            color: #666;
+            margin-top: 20px;
+        }
+
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 14px;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>You're Invited to Join a Workspace!</h1>
+    <p>You've been invited to join the following workspace:</p>
+
+    <div class="workspace-info">
+        <div class="workspace-name">{{WORKSPACE_NAME}}</div>
+        <div class="workspace-role">Role: {{ROLE}}</div>
+    </div>
+
+    <p>Click one of the buttons below to respond to this invitation:</p>
+
+    <div class="button-container">
+        <a class="button button-accept" href="{{ACCEPT_URL}}" target="_blank">
+            Accept Invitation
+        </a>
+        <a class="button button-reject" href="{{REJECT_URL}}" target="_blank">
+            Reject Invitation
+        </a>
+    </div>
+
+    <p class="expiry-note">This invitation will expire on {{EXPIRY_DATE}}.</p>
+    <p>If you didn't expect this invitation, you can safely ignore this email.</p>
+
+    <div class="footer">
+        <p>Regards,<br>The PFK Task Team</p>
+    </div>
+</div>
+</body>
+</html>

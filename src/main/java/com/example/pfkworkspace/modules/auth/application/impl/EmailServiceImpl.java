@@ -2,6 +2,7 @@ package com.example.pfkworkspace.modules.auth.application.impl;
 
 import com.example.pfkworkspace.modules.auth.application.EmailService;
 import com.example.pfkworkspace.modules.auth.api.EmailSendingException;
+import com.example.pfkworkspace.modules.workspace.api.dto.CreateInvitationRequestDto;
 import com.resend.Resend;
 import com.resend.core.exception.ResendException;
 import com.resend.services.emails.model.CreateEmailOptions;
@@ -63,6 +64,29 @@ public class EmailServiceImpl implements EmailService {
       resend.emails().send(options);
     } catch (IOException | ResendException e) {
       throw new EmailSendingException("Unable to send account verified email", e);
+    }
+  }
+
+  @Override
+  public void sendWorkspaceInvitationEmail(
+      String to, String subject, CreateInvitationRequestDto.WorkspaceInvitationParams params) {
+    try {
+      Resend resend = new Resend(apiKey);
+
+      String body =
+          getHtmlBody("classpath:templates/workspace-invitation.html")
+              .replace("{{WORKSPACE_NAME}}", params.getWorkspaceName())
+              .replace("{{ROLE}}", params.getWorkspaceRole().name())
+              .replace("{{ACCEPT_URL}}", params.getAcceptUrl())
+              .replace("{{REJECT_URL}}", params.getRejectUrl())
+              .replace("{{EXPIRY_DATE}}", params.getExpiryDate());
+
+      CreateEmailOptions options =
+          CreateEmailOptions.builder().from(emailFrom).to(to).subject(subject).html(body).build();
+
+      resend.emails().send(options);
+    } catch (IOException | ResendException e) {
+      throw new EmailSendingException("Unable to send workspace invitation email", e);
     }
   }
 

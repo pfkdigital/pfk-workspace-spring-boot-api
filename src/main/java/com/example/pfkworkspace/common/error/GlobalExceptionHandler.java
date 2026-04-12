@@ -6,6 +6,7 @@ import com.example.pfkworkspace.common.error.ConflictException;
 import com.example.pfkworkspace.common.error.NotFoundException;
 import com.example.pfkworkspace.common.error.UnauthorizedException;
 import com.example.pfkworkspace.modules.auth.api.EmailSendingException;
+import com.example.pfkworkspace.modules.user.api.UserNotFoundException;
 import com.example.pfkworkspace.modules.workspace.api.exception.WorkspaceNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import java.time.Instant;
@@ -131,6 +132,11 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(WorkspaceNotFoundException.class)
   public ResponseEntity<ApiResponse> handleWorkspaceNotFound(WorkspaceNotFoundException exception) {
     return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage());
+  }
+
+  @ExceptionHandler(UserNotFoundException.class)
+  public ResponseEntity<ApiResponse> handlingUserNotFound(UserNotFoundException exception) {
+    return buildResponse(HttpStatus.NOT_FOUND,exception.getMessage());
   }
 
   @ExceptionHandler(Exception.class)
