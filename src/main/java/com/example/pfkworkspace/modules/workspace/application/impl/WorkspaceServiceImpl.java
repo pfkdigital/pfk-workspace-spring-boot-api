@@ -200,4 +200,53 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
     log.info("Member userId={} role updated to {} in workspaceId={}", userId, role, workspaceId);
   }
+
+  @Override
+  @Transactional
+  public void transferOwnerShip(UUID workspaceId, UUID userId) {
+    User currentUser = userContextService.getCurrentUser();
+    Workspace workspace =
+        workspaceRepository
+            .findById(workspaceId)
+            .orElseThrow(() -> new WorkspaceNotFoundException("Workspace was not found workspaceId: " + workspaceId));
+
+    if (!currentUser.getId().equals(workspace.getOwner().getId())) {
+      throw new AuthorizationDeniedException("Only the workspace owner can transfer ownership");
+    }
+
+    WorkspaceMember newOwnerMember =
+        workspaceMemberRepository
+            .findByUserIdAndWorkspaceId(userId, workspaceId)
+            .orElseThrow(() -> new WorkspaceMemberNotFoundException("User is not a member of this workspace"));
+
+    WorkspaceMember currentOwnerMember =
+        workspaceMemberRepository
+            .findByUserIdAndWorkspaceId(currentUser.getId(), workspaceId)
+            .orElseThrow(() -> new WorkspaceMemberNotFoundException("Current owner membership not found"));
+
+    workspace.setOwner(newOwnerMember.getUser());
+    newOwnerMember.setRole(WorkspaceRole.OWNER);
+    currentOwnerMember.setRole(WorkspaceRole.ADMIN);
+
+    workspaceRepository.save(workspace);
+
+    log.info("Ownership of workspaceId={} transferred from userId={} to userId={}", workspaceId, currentUser.getId(), userId);
+  }
+
+  // TODO
+  // When the Task and other modules are in place
+  /*
+   * Leave Workspace
+   * User leaves workspace by pressing button on frontend - need userId + Workspace Id
+   * Removes workspace member
+   * All owned tasks need to be reassigned to owner
+   * All attachments need to be reassigned to owner
+   * */
+  @Override
+  public void leaveWorkspace(UUID workspaceId) {
+    User currentUser = userContextService.getCurrentUser();
+    log.info("Member userId ={} has left the workspace workspaceId = {}",currentUser.getId(), workspaceId);
+  }
+
+
 }

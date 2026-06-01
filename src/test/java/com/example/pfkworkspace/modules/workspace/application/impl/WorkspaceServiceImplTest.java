@@ -198,4 +198,75 @@ class WorkspaceServiceImplTest {
         assertThatThrownBy(() -> workspaceService.updateMemberRole(workspaceId, userId, WorkspaceRole.OWNER))
                 .isInstanceOf(AuthorizationDeniedException.class);
     }
+
+    @Test
+    void transferOwnership_WhenOwner_ShouldTransferSuccessfully() {
+        User newOwner = User.builder()
+                .email("newowner@example.com")
+                .username("newowner")
+                .firstName("New")
+                .lastName("Owner")
+                .build();
+        newOwner.setId(UUID.randomUUID());
+
+        WorkspaceMember newOwnerMember = WorkspaceMember.builder()
+                .user(newOwner)
+                .role(WorkspaceRole.ADMIN)
+                .build();
+
+        WorkspaceMember currentOwnerMember = WorkspaceMember.builder()
+                .user(currentUser)
+                .role(WorkspaceRole.OWNER)
+                .build();
+
+        when(userContextService.getCurrentUser()).thenReturn(currentUser);
+        when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.of(workspace));
+        when(workspaceMemberRepository.findByUserIdAndWorkspaceId(newOwner.getId(), workspaceId)).thenReturn(Optional.of(newOwnerMember));
+        when(workspaceMemberRepository.findByUserIdAndWorkspaceId(currentUser.getId(), workspaceId)).thenReturn(Optional.of(currentOwnerMember));
+
+        workspaceService.transferOwnerShip(workspaceId, newOwner.getId());
+
+        assertThat(workspace.getOwner()).isEqualTo(newOwner);
+        assertThat(newOwnerMember.getRole()).isEqualTo(WorkspaceRole.OWNER);
+        assertThat(currentOwnerMember.getRole()).isEqualTo(WorkspaceRole.ADMIN);
+        verify(workspaceRepository).save(workspace);
+    }
+
+    @Test
+    void transferOwnership_WhenWorkspaceNotFound_ShouldThrowException() {
+        when(userContextService.getCurrentUser()).thenReturn(currentUser);
+        when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> workspaceService.transferOwnerShip(workspaceId, UUID.randomUUID()))
+                .isInstanceOf(WorkspaceNotFoundException.class);
+    }
+
+    @Test
+    void transferOwnership_WhenCallerIsNotOwner_ShouldThrowException() {
+        User otherUser = User.builder()
+                .email("other@example.com")
+                .username("other")
+                .firstName("Other")
+                .lastName("User")
+                .build();
+        otherUser.setId(UUID.randomUUID());
+
+        when(userContextService.getCurrentUser()).thenReturn(otherUser);
+        when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.of(workspace));
+
+        assertThatThrownBy(() -> workspaceService.transferOwnerShip(workspaceId, UUID.randomUUID()))
+                .isInstanceOf(AuthorizationDeniedException.class);
+    }
+
+    @Test
+    void transferOwnership_WhenTargetUserNotMember_ShouldThrowException() {
+        UUID newOwnerId = UUID.randomUUID();
+
+        when(userContextService.getCurrentUser()).thenReturn(currentUser);
+        when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.of(workspace));
+        when(workspaceMemberRepository.findByUserIdAndWorkspaceId(newOwnerId, workspaceId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> workspaceService.transferOwnerShip(workspaceId, newOwnerId))
+                .isInstanceOf(WorkspaceMemberNotFoundException.class);
+    }
 }

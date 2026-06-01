@@ -14,4 +14,6 @@ public interface WorkspaceService {
   void deleteWorkspace(UUID workspaceId);
   void removeUserFromWorkspace(UUID workspaceId, UUID userId);
   void updateMemberRole(UUID workspaceId, UUID userId, WorkspaceRole role);
+  void transferOwnerShip(UUID workspaceId, UUID userId);
+  void leaveWorkspace(UUID workspaceId);
 }
