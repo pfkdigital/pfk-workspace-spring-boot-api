@@ -20,8 +20,6 @@ public class WorkspaceController {
   private final WorkspaceService workspaceService;
   private final WorkspaceInvitationService workspaceInvitationService;
 
-  // --- Workspace Operations ---
-
   @PostMapping
   public ResponseEntity<ApiResponse> createWorkspace(
       @Valid @RequestBody CreateWorkspaceRequestDto createWorkspaceRequestDto) {

@@ -3,10 +3,7 @@ package com.example.pfkworkspace.modules.auth.domain;
 import com.example.pfkworkspace.common.persistence.BaseEntity;
 import com.example.pfkworkspace.modules.user.domain.User;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -26,6 +23,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 @Getter
+@Setter
 public class EmailVerificationToken extends BaseEntity {
   @Column(name = "user_id", nullable = false, columnDefinition = "uuid")
   private UUID userId;

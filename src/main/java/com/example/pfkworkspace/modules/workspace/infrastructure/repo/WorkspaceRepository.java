@@ -13,5 +13,5 @@ import java.util.UUID;
 public interface WorkspaceRepository extends JpaRepository<Workspace, UUID> {
   @Query(
       "SELECT w from Workspace w LEFT JOIN FETCH w.owner LEFT JOIN FETCH w.workspaceMembers m LEFT JOIN FETCH m.user WHERE w.id = :id")
-  Optional<Workspace> findByIdWithDetails(@Param("workspaceId") UUID workspaceId);
+  Optional<Workspace> findByIdWithDetails(@Param("id") UUID workspaceId);
 }

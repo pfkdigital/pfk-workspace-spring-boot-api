@@ -158,7 +158,7 @@ class WorkspaceServiceImplTest {
         
         when(workspaceSecurityService.isOwnerOrAdmin(workspaceId)).thenReturn(true);
         when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.of(workspace));
-        when(workspaceMemberRepository.findById(userIdToRemove)).thenReturn(Optional.of(memberToRemove));
+        when(workspaceMemberRepository.findByUserIdAndWorkspaceId(userIdToRemove, workspaceId)).thenReturn(Optional.of(memberToRemove));
 
         workspaceService.removeUserFromWorkspace(workspaceId, userIdToRemove);
 
@@ -168,24 +168,32 @@ class WorkspaceServiceImplTest {
     @Test
     void updateMemberRole_WhenAuthorized_ShouldUpdate() {
         UUID userId = UUID.randomUUID();
-        WorkspaceMember member = new WorkspaceMember();
-        member.setUser(new User());
-        member.setRole(WorkspaceRole.MEMBER);
 
-        when(workspaceSecurityService.isOwnerOrAdmin(workspaceId)).thenReturn(true);
-        when(workspaceMemberRepository.findByUserIdAndWorkspaceId(userId, workspaceId)).thenReturn(Optional.of(member));
+        WorkspaceMember currentMember = new WorkspaceMember();
+        currentMember.setRole(WorkspaceRole.ADMIN);
+
+        WorkspaceMember targetMember = new WorkspaceMember();
+        targetMember.setRole(WorkspaceRole.MEMBER);
+
+        when(userContextService.getCurrentUser()).thenReturn(currentUser);
+        when(workspaceMemberRepository.findByUserIdAndWorkspaceId(currentUser.getId(), workspaceId)).thenReturn(Optional.of(currentMember));
+        when(workspaceMemberRepository.findByUserIdAndWorkspaceId(userId, workspaceId)).thenReturn(Optional.of(targetMember));
 
         workspaceService.updateMemberRole(workspaceId, userId, WorkspaceRole.ADMIN);
 
-        assertThat(member.getRole()).isEqualTo(WorkspaceRole.ADMIN);
-        verify(workspaceMemberRepository).save(member);
+        assertThat(targetMember.getRole()).isEqualTo(WorkspaceRole.ADMIN);
+        verify(workspaceMemberRepository).save(targetMember);
     }
 
     @Test
     void updateMemberRole_ToOwnerByNonOwner_ShouldThrowException() {
         UUID userId = UUID.randomUUID();
-        when(workspaceSecurityService.isOwnerOrAdmin(workspaceId)).thenReturn(true);
-        when(workspaceSecurityService.isOwner(workspaceId)).thenReturn(false);
+
+        WorkspaceMember currentMember = new WorkspaceMember();
+        currentMember.setRole(WorkspaceRole.ADMIN);
+
+        when(userContextService.getCurrentUser()).thenReturn(currentUser);
+        when(workspaceMemberRepository.findByUserIdAndWorkspaceId(currentUser.getId(), workspaceId)).thenReturn(Optional.of(currentMember));
 
         assertThatThrownBy(() -> workspaceService.updateMemberRole(workspaceId, userId, WorkspaceRole.OWNER))
                 .isInstanceOf(AuthorizationDeniedException.class);

@@ -31,9 +31,11 @@ public class Workspace extends BaseEntity {
   @JoinColumn(name = "owner_user_id", nullable = false)
   private User owner;
 
+  @Builder.Default
   @OneToMany(mappedBy = "workspace", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<WorkspaceMember> workspaceMembers = new ArrayList<>();
 
+  @Builder.Default
   @OneToMany(mappedBy = "workspace", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<WorkspaceInvitation> workspaceInvitations = new ArrayList<>();
 

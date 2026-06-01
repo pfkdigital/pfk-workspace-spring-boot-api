@@ -1,7 +1,6 @@
 package com.example.pfkworkspace.modules.auth.infrastructure;
 
 import com.example.pfkworkspace.common.api.ApiResponse;
-import com.example.pfkworkspace.common.error.ApiError;
 import com.example.pfkworkspace.common.util.CookieUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.JwtException;
@@ -50,7 +49,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     try {
       String username = jwtUtility.extractUsername(token);
-      log.info("Extracted username from token: {}", username);
+      log.debug("Extracted username from token: {}", username);
 
       if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
@@ -64,7 +63,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
           SecurityContextHolder.getContext().setAuthentication(authToken);
 
-          log.info("JWT authenticated user: {}", username);
+          log.debug("JWT authenticated user: {}", username);
+        } else {
+          log.warn("JWT token present but failed validation for user: {}", username);
         }
       }
 
@@ -84,14 +85,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
       message = e.getMessage();
     }
 
-    ApiError apiError =
-        ApiError.builder()
-            .status(HttpStatus.UNAUTHORIZED)
-            .message(message)
-            .timestamp(Instant.now())
-            .build();
     ApiResponse apiResponse =
-        ApiResponse.builder().success(false).message(message).data(apiError).build();
+        ApiResponse.builder().success(false).message(message).timestamp(Instant.now()).build();
     response.setStatus(HttpStatus.UNAUTHORIZED.value());
     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
     objectMapper.writeValue(response.getOutputStream(), apiResponse);

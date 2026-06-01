@@ -25,17 +25,11 @@ public class ApiAuthenticationEntryPoint implements AuthenticationEntryPoint {
   public void commence(
       HttpServletRequest request, HttpServletResponse response, AuthenticationException ex)
       throws IOException {
-    ApiError apiError =
-        ApiError.builder()
-            .status(HttpStatus.UNAUTHORIZED)
-            .message("Authentication is required.")
-            .timestamp(Instant.now())
-            .build();
     ApiResponse apiResponse =
         ApiResponse.builder()
             .success(false)
-            .message(apiError.getMessage())
-            .data(apiError)
+            .message("Authentication is required.")
+            .timestamp(Instant.now())
             .build();
     response.setStatus(HttpStatus.UNAUTHORIZED.value());
     response.setContentType(MediaType.APPLICATION_JSON_VALUE);

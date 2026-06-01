@@ -55,13 +55,6 @@ public class WorkspaceInvitationImpl implements WorkspaceInvitationService {
   public InvitationResponseDto addMemberToWorkspace(
       CreateInvitationRequestDto createInvitationRequestDto, UUID workspaceId) {
 
-    if (workspaceSecurityService.isOwner(workspaceId)
-        || workspaceSecurityService.isAdmin(workspaceId)) {
-      log.info("User is authorized to add a new member to the workspace with id: {}", workspaceId);
-      throw new AuthorizationDeniedException(
-          "You must be an owner or admin of the workspace to add a new member");
-    }
-
     if (!workspaceSecurityService.isOwnerOrAdmin(workspaceId)) {
       throw new AuthorizationDeniedException(
           "You must be a user or admin of the workspace to add a new member");
@@ -109,8 +102,9 @@ public class WorkspaceInvitationImpl implements WorkspaceInvitationService {
     selectedWorkspace.addWorkspaceInvitation(workspaceInvitation);
     workspaceInvitationRepository.save(workspaceInvitation);
 
-    String emailSubject = "You are invited to " + selectedWorkspace.getName() + " workspace";
-    emailService.sendWorkspaceInvitationEmail(derivedUser.getEmail(), emailSubject, params);
+    emailService.sendWorkspaceInvitationEmail(derivedUser.getEmail(), params);
+
+    log.info("Invitation sent to email={} for workspaceId={} with role={}", derivedUser.getEmail(), workspaceId, createInvitationRequestDto.role());
 
     return workspaceInvitationMapper.toInvitationResponseDto(workspaceInvitation);
   }
@@ -137,8 +131,7 @@ public class WorkspaceInvitationImpl implements WorkspaceInvitationService {
     workspaceInvitation.setIsUsed(true);
     workspaceRepository.save(workspace);
 
-    log.info(
-        "User successfully accepted the invitation to join the workspace: {}", workspace.getName());
+    log.info("userId={} accepted invitation to workspaceId={}", newUser.getId(), workspace.getId());
   }
 
   @Override
@@ -155,9 +148,7 @@ public class WorkspaceInvitationImpl implements WorkspaceInvitationService {
     workspaceInvitation.setIsUsed(true);
     workspaceInvitationRepository.save(workspaceInvitation);
 
-    log.info(
-        "User successfully declined the invitation to join the workspace: {}",
-        workspaceInvitation.getWorkspace().getName());
+    log.info("userId={} declined invitation to workspaceId={}", currentUser.getId(), workspaceInvitation.getWorkspace().getId());
   }
 
   @Override
@@ -195,10 +186,9 @@ public class WorkspaceInvitationImpl implements WorkspaceInvitationService {
         expiryDate,
         token);
 
-    String emailSubject = "Your invitation to join the " + workspaceInvitation.getWorkspace().getName() + " workspace has been resent";
-    emailService.sendWorkspaceInvitationEmail(workspaceInvitation.getEmail(), emailSubject, params);
+    emailService.sendWorkspaceInvitationEmail(workspaceInvitation.getEmail(), params);
 
-    log.info("User successfully resent the invitation to join the workspace: {}", workspaceInvitation.getWorkspace().getName());
+    log.info("Invitation id={} resent to email={} for workspaceId={}", invitationId, workspaceInvitation.getEmail(), workspaceInvitation.getWorkspace().getId());
   }
 
   @Override
@@ -224,9 +214,7 @@ public class WorkspaceInvitationImpl implements WorkspaceInvitationService {
     workspaceInvitation.setIsUsed(true);
     workspaceInvitationRepository.save(workspaceInvitation);
 
-    log.info(
-        "User successfully revoked the invitation to join the workspace: {}",
-        workspaceInvitation.getWorkspace().getName());
+    log.info("Invitation id={} revoked for workspaceId={}", invitationId, workspaceInvitation.getWorkspace().getId());
   }
 
   private CreateInvitationRequestDto.WorkspaceInvitationParams buildInvitationParams(

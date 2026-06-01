@@ -24,7 +24,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -99,8 +101,8 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(BadCredentialsException.class)
   public ResponseEntity<ApiResponse> handleBadCredentials(BadCredentialsException ex) {
-    String message = "Invalid username or password.";
-    return buildResponse(HttpStatus.UNAUTHORIZED, message);
+    log.warn("Failed login attempt: {}", ex.getMessage());
+    return buildResponse(HttpStatus.UNAUTHORIZED, "Invalid username or password.");
   }
 
   @ExceptionHandler(AuthenticationException.class)
@@ -118,13 +120,13 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(AccessDeniedException.class)
   public ResponseEntity<ApiResponse> handleAccessDenied(AccessDeniedException ex) {
-    String message =
-        safeMessage(ex.getMessage(), "You do not have permission to perform this action.");
-    return buildResponse(HttpStatus.FORBIDDEN, message);
+    log.warn("Access denied: {}", ex.getMessage());
+    return buildResponse(HttpStatus.FORBIDDEN, "You do not have permission to perform this action.");
   }
 
   @ExceptionHandler(EmailSendingException.class)
   public ResponseEntity<ApiResponse> handleEmailSending(EmailSendingException ex) {
+    log.error("Email service failure: {}", ex.getMessage(), ex);
     String message = "Email service is temporarily unavailable. Please try again later.";
     return buildResponse(HttpStatus.BAD_GATEWAY, message);
   }
@@ -141,8 +143,8 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ApiResponse> handleUnexpected(Exception ex) {
-    String message = safeMessage(ex.getMessage(), "Unexpected error occurred.");
-    return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, message);
+    log.error("Unexpected error: {}", ex.getMessage(), ex);
+    return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred.");
   }
 
   private ResponseEntity<ApiResponse> buildResponse(HttpStatus status, String message) {
@@ -151,15 +153,8 @@ public class GlobalExceptionHandler {
 
   private ResponseEntity<ApiResponse> buildResponse(
       HttpStatus status, String message, List<String> errors) {
-    ApiError apiError =
-        ApiError.builder()
-            .status(status)
-            .message(message)
-            .timestamp(Instant.now())
-            .errors(errors)
-            .build();
     ApiResponse response =
-        ApiResponse.builder().success(false).message(message).data(apiError).build();
+        ApiResponse.builder().success(false).message(message).errors(errors).timestamp(Instant.now()).build();
     return new ResponseEntity<>(response, status);
   }
 

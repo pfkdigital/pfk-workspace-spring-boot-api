@@ -108,7 +108,7 @@ class AuthServiceImplTest {
         assertThat(response.getMessage()).contains("User registered successfully");
         verify(userRepository).save(any(User.class));
         verify(emailVerificationTokenRepository).save(any(EmailVerificationToken.class));
-        verify(emailService).sendVerificationEmail(eq("test@example.com"), anyString(), anyString());
+        verify(emailService).sendVerificationEmail(eq("test@example.com"), anyString());
     }
 
     @Test
@@ -135,8 +135,8 @@ class AuthServiceImplTest {
         assertThat(response.getMessage()).contains("Email verified successfully");
         assertThat(user.isEmailVerified()).isTrue();
         verify(userRepository).save(user);
-        verify(emailVerificationTokenRepository).delete(token);
-        verify(emailService).sendAccountVerifiedEmail(eq(user.getEmail()), anyString());
+        verify(emailVerificationTokenRepository).save(token);
+        verify(emailService).sendAccountVerifiedEmail(eq(user.getEmail()));
     }
 
     @Test

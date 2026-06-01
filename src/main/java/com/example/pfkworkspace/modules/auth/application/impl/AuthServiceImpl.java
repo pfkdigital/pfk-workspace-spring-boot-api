@@ -37,7 +37,6 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HexFormat;
-import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
@@ -65,11 +64,9 @@ public class AuthServiceImpl implements AuthService {
       throw new ConflictException("Username is already in use");
     }
 
-    // Create and save the new user
     User newUser = createNewUser(registrationRequestDto);
     userRepository.save(newUser);
 
-    // Create and save the email verification token
     String rawToken = RandomTokenGenerator.generateToken();
     String tokenHash = sha256Hash(rawToken);
     EmailVerificationToken verificationToken =
@@ -79,10 +76,10 @@ public class AuthServiceImpl implements AuthService {
             .expiresAt(java.time.Instant.now().plus(java.time.Duration.ofHours(24)))
             .build();
     emailVerificationTokenRepository.save(verificationToken);
+    
+    emailService.sendVerificationEmail(registrationRequestDto.email(), rawToken);
 
-    // Send the verification email
-    emailService.sendVerificationEmail(
-        registrationRequestDto.email(), "Verify your email", rawToken);
+    log.info("User registered: username={}, userId={}", newUser.getUsername(), newUser.getId());
 
     return RegisterResponseDto.builder()
         .message("User registered successfully. Please check your email to verify your account.")
@@ -91,19 +88,19 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public VerifyResponseDto verify(String token) {
-    // Find the verification token and associated user
     String tokenHash = sha256Hash(token);
     EmailVerificationToken verificationToken =
         emailVerificationTokenRepository
             .findByTokenHash(tokenHash)
             .orElseThrow(() -> new BadRequestException("Invalid verification token"));
 
-    if (verificationToken.isUsed()
-        || verificationToken.getExpiresAt().isBefore(java.time.Instant.now())) {
+    if (verificationToken.isUsed()) {
+      throw new BadRequestException("Verification token has already been used");
+    }
+    if (verificationToken.getExpiresAt().isBefore(java.time.Instant.now())) {
       throw new BadRequestException("Verification token has expired");
     }
 
-    // Mark the user's email as verified and save the user
     User user =
         userRepository
             .findById(verificationToken.getUserId())
@@ -111,11 +108,12 @@ public class AuthServiceImpl implements AuthService {
     user.markEmailVerified();
     userRepository.save(user);
 
-    // Mark the token as used and delete it
-    emailVerificationTokenRepository.delete(verificationToken);
+    verificationToken.setUsed(true);
+    emailVerificationTokenRepository.save(verificationToken);
+    
+    emailService.sendAccountVerifiedEmail(user.getEmail());
 
-    // Send account verified email
-    emailService.sendAccountVerifiedEmail(user.getEmail(), "Your account has been verified");
+    log.info("Email verified for userId={}", user.getId());
 
     return VerifyResponseDto.builder()
         .message(
@@ -145,7 +143,9 @@ public class AuthServiceImpl implements AuthService {
             .build();
     refreshTokenRepository.save(refreshTokenEntity);
 
-    addCookiesToResponse(response, jwtToken, refreshToken);
+    this.addCookiesToResponse(response, jwtToken, refreshToken);
+
+    log.info("User authenticated: username={}, userId={}", user.getUsername(), user.getId());
 
     return AuthenticateResponseDto.builder().message("Authenticated successfully").build();
   }
@@ -163,14 +163,14 @@ public class AuthServiceImpl implements AuthService {
             .orElseThrow(() -> new UnauthorizedException("Invalid refresh token"));
 
     if (refreshToken.isRevoked()) {
-      throw new UnauthorizedException("Refresh token has been revoked");
+      throw new UnauthorizedException("Refresh token has been revoked, please sign in again");
     }
 
     String username = jwtUtility.extractUsername(token);
     User user =
         userRepository
             .findByUsername(username)
-            .orElseThrow(() -> new NotFoundException("User not found"));
+            .orElseThrow(() -> new UnauthorizedException("Invalid refresh token"));
 
     if (!jwtUtility.isTokenValid(token, user)) {
       throw new UnauthorizedException("Invalid refresh token");
@@ -179,6 +179,8 @@ public class AuthServiceImpl implements AuthService {
     String newJwtToken = jwtUtility.generateAccessToken(user);
 
     addCookiesToResponse(response, newJwtToken, token);
+
+    log.info("Token refreshed for userId={}", user.getId());
 
     return RefreshResponseDto.builder().message("Token refreshed successfully").build();
   }
@@ -253,10 +255,9 @@ public class AuthServiceImpl implements AuthService {
 
               passwordResetTokenRepository.save(tokenEntity);
 
-              log.info("Password reset token generated for userId={}", user.getId());
+              log.info("Password reset requested for userId={}", user.getId());
 
-              emailService.sendPasswordResetEmail(
-                  forgotPasswordRequestDto.email(), "Password Reset Request", rawToken);
+              emailService.sendPasswordResetEmail(forgotPasswordRequestDto.email(), rawToken);
 
               return ForgotPasswordResponseDto.builder().message(genericMessage).build();
             })
@@ -281,7 +282,7 @@ public class AuthServiceImpl implements AuthService {
     User user =
         userRepository
             .findById(resetToken.getUserId())
-            .orElseThrow(() -> new NotFoundException("User not found"));
+            .orElseThrow(() -> new UnauthorizedException("Invalid password reset token"));
     user.setPasswordHash(passwordEncoder.encode(updatePasswordRequestDto.newPassword()));
     userRepository.save(user);
 
@@ -292,7 +293,9 @@ public class AuthServiceImpl implements AuthService {
     cookieUtil.deleteAccessTokenCookie(response);
     cookieUtil.deleteRefreshTokenCookie(response);
 
-    emailService.sendPasswordUpdatedEmail(user.getEmail(), "Your password has been updated");
+    emailService.sendPasswordUpdatedEmail(user.getEmail());
+
+    log.info("Password updated for userId={}", user.getId());
 
     return UpdatePasswordResponseDto.builder()
         .message("Password updated successfully, please login with new password")

@@ -64,9 +64,11 @@ public class User extends BaseEntity implements UserDetails {
   @Column(nullable = false, name = "role")
   private Set<String> roles = Set.of("ROLE_USER");
 
+  @Builder.Default
   @OneToMany(mappedBy = "owner")
   private List<Workspace> ownedWorkspaces = new ArrayList<>();
 
+  @Builder.Default
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<WorkspaceMember> workspaceMembership = new ArrayList<>();
 

@@ -25,17 +25,11 @@ public class ApiAccessDeniedHandler implements AccessDeniedHandler {
   public void handle(
       HttpServletRequest request, HttpServletResponse response, AccessDeniedException ex)
       throws IOException {
-    ApiError apiError =
-        ApiError.builder()
-            .status(HttpStatus.FORBIDDEN)
-            .message("You do not have permission to perform this action.")
-            .timestamp(Instant.now())
-            .build();
     ApiResponse apiResponse =
         ApiResponse.builder()
             .success(false)
-            .message(apiError.getMessage())
-            .data(apiError)
+            .message("You do not have permission to perform this action.")
+            .timestamp(Instant.now())
             .build();
     response.setStatus(HttpStatus.FORBIDDEN.value());
     response.setContentType(MediaType.APPLICATION_JSON_VALUE);

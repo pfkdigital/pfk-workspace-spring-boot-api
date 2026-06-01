@@ -73,9 +73,6 @@ class WorkspaceInvitationImplTest {
         User user = new User();
         user.setEmail("test@example.com");
 
-        // Fixed authorization logic based on implementation
-        when(workspaceSecurityService.isOwner(workspaceId)).thenReturn(false);
-        when(workspaceSecurityService.isAdmin(workspaceId)).thenReturn(false);
         when(workspaceSecurityService.isOwnerOrAdmin(workspaceId)).thenReturn(true);
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
         when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.of(workspace));
@@ -86,7 +83,7 @@ class WorkspaceInvitationImplTest {
 
         assertThat(response).isNotNull();
         verify(workspaceInvitationRepository).save(any(WorkspaceInvitation.class));
-        verify(emailService).sendWorkspaceInvitationEmail(eq("test@example.com"), anyString(), any());
+        verify(emailService).sendWorkspaceInvitationEmail(eq("test@example.com"), any());
     }
 
     @Test

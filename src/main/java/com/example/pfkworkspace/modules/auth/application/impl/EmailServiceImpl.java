@@ -31,7 +31,7 @@ public class EmailServiceImpl implements EmailService {
   private String emailFrom;
 
   @Override
-  public void sendVerificationEmail(String to, String subject, String token) {
+  public void sendVerificationEmail(String to, String token) {
     try {
       Resend resend = new Resend(apiKey);
 
@@ -41,7 +41,7 @@ public class EmailServiceImpl implements EmailService {
           CreateEmailOptions.builder()
               .from(emailFrom)
               .to(to)
-              .subject(subject)
+              .subject("Verify your email")
               .html(body.replace("{{TOKEN}}", token))
               .build();
 
@@ -52,14 +52,19 @@ public class EmailServiceImpl implements EmailService {
   }
 
   @Override
-  public void sendAccountVerifiedEmail(String to, String subject) {
+  public void sendAccountVerifiedEmail(String to) {
     try {
       Resend resend = new Resend(apiKey);
 
       String body = getHtmlBody("classpath:templates/account-verified.html");
 
       CreateEmailOptions options =
-          CreateEmailOptions.builder().from(emailFrom).to(to).subject(subject).html(body).build();
+          CreateEmailOptions.builder()
+              .from(emailFrom)
+              .to(to)
+              .subject("Your account has been verified")
+              .html(body)
+              .build();
 
       resend.emails().send(options);
     } catch (IOException | ResendException e) {
@@ -69,7 +74,7 @@ public class EmailServiceImpl implements EmailService {
 
   @Override
   public void sendWorkspaceInvitationEmail(
-      String to, String subject, CreateInvitationRequestDto.WorkspaceInvitationParams params) {
+      String to, CreateInvitationRequestDto.WorkspaceInvitationParams params) {
     try {
       Resend resend = new Resend(apiKey);
 
@@ -82,7 +87,12 @@ public class EmailServiceImpl implements EmailService {
               .replace("{{EXPIRY_DATE}}", params.getExpiryDate());
 
       CreateEmailOptions options =
-          CreateEmailOptions.builder().from(emailFrom).to(to).subject(subject).html(body).build();
+          CreateEmailOptions.builder()
+              .from(emailFrom)
+              .to(to)
+              .subject("You are invited to " + params.getWorkspaceName() + " workspace")
+              .html(body)
+              .build();
 
       resend.emails().send(options);
     } catch (IOException | ResendException e) {
@@ -90,7 +100,7 @@ public class EmailServiceImpl implements EmailService {
     }
   }
 
-  public void sendPasswordResetEmail(String to, String subject, String token) {
+  public void sendPasswordResetEmail(String to, String token) {
     try {
       Resend resend = new Resend(apiKey);
 
@@ -100,7 +110,7 @@ public class EmailServiceImpl implements EmailService {
           CreateEmailOptions.builder()
               .from(emailFrom)
               .to(to)
-              .subject(subject)
+              .subject("Password reset request")
               .html(body.replace("{{TOKEN}}", token))
               .build();
 
@@ -110,14 +120,19 @@ public class EmailServiceImpl implements EmailService {
     }
   }
 
-  public void sendPasswordUpdatedEmail(String to, String subject) {
+  public void sendPasswordUpdatedEmail(String to) {
     try {
       Resend resend = new Resend(apiKey);
 
       String body = getHtmlBody("classpath:templates/reset-password-success-email.html");
 
       CreateEmailOptions options =
-          CreateEmailOptions.builder().from(emailFrom).to(to).subject(subject).html(body).build();
+          CreateEmailOptions.builder()
+              .from(emailFrom)
+              .to(to)
+              .subject("Your password has been updated")
+              .html(body)
+              .build();
 
       resend.emails().send(options);
     } catch (IOException | ResendException e) {

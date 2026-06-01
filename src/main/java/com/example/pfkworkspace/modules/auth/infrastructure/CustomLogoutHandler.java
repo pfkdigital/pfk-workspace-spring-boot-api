@@ -37,7 +37,7 @@ public class CustomLogoutHandler implements LogoutSuccessHandler {
       String refreshToken = cookieUtil.getCookie(request, "refresh_token");
 
         if (refreshToken == null) {
-            log.info("Clearing refresh token cookie on logout");
+            log.warn("Logout attempted with no refresh token cookie");
             throw new RefreshTokenNotFoundException("No refresh token found in cookies");
         }
 
@@ -47,7 +47,7 @@ public class CustomLogoutHandler implements LogoutSuccessHandler {
 
         cookieUtil.deleteCookie(response,"access_token");
         cookieUtil.deleteCookie(response, "refresh_token");
-        log.info("Successfully logged out user and cleared refresh token");
+        log.info("User logged out: username={}", authentication != null ? authentication.getName() : "unknown");
       LogoutResponseDto logoutResponse = new LogoutResponseDto("Successfully logged out");
       response.setContentType("application/json");
       response.setCharacterEncoding("UTF-8");
