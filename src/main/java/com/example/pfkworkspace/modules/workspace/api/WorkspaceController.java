@@ -45,7 +45,7 @@ public class WorkspaceController {
   }
 
   @GetMapping("/{workspaceId}")
-  public ResponseEntity<ApiResponse> getWorkspaceDetail(@PathVariable UUID workspaceId) {
+  public ResponseEntity<ApiResponse> getWorkspaceById(@PathVariable UUID workspaceId) {
     WorkspaceDetailDto workspaceDetail = workspaceService.getWorkspaceDetail(workspaceId);
     ApiResponse apiResponse =
         ApiResponse.builder()
@@ -58,7 +58,7 @@ public class WorkspaceController {
   }
 
   @PutMapping("/{workspaceId}")
-  public ResponseEntity<ApiResponse> updateWorkspace(
+  public ResponseEntity<ApiResponse> updateWorkspaceById(
       @PathVariable UUID workspaceId,
       @Valid @RequestBody UpdateWorkspaceRequestDto updateWorkspaceRequestDto) {
     UpdateWorkspaceResponseDto responseDto =
@@ -70,7 +70,7 @@ public class WorkspaceController {
   }
 
   @DeleteMapping("/{workspaceId}")
-  public ResponseEntity<ApiResponse> deleteWorkspace(@PathVariable UUID workspaceId) {
+  public ResponseEntity<ApiResponse> deleteWorkspaceById(@PathVariable UUID workspaceId) {
     workspaceService.deleteWorkspace(workspaceId);
     ApiResponse apiResponse =
         ApiResponse.builder()
@@ -111,8 +111,6 @@ public class WorkspaceController {
             .build();
     return ResponseEntity.ok(apiResponse);
   }
-
-  // --- Invitation Operations ---
 
   @PostMapping("/{workspaceId}")
   public ResponseEntity<ApiResponse> addMemberToWorkspace(

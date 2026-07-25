@@ -1,8 +1,9 @@
 package com.example.pfkworkspace.modules.workspace.application.impl;
 
 import com.example.pfkworkspace.common.security.HashingService;
-import com.example.pfkworkspace.modules.auth.application.EmailService;
 import com.example.pfkworkspace.modules.auth.application.UserContextService;
+import com.example.pfkworkspace.modules.email.application.EmailOutboxService;
+import com.example.pfkworkspace.modules.email.domain.EmailType;
 import com.example.pfkworkspace.modules.user.domain.User;
 import com.example.pfkworkspace.modules.user.infrastructure.repo.UserRepository;
 import com.example.pfkworkspace.modules.workspace.api.dto.CreateInvitationRequestDto;
@@ -32,13 +33,15 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class WorkspaceInvitationImplTest {
 
     @Mock
-    private EmailService emailService;
+    private EmailOutboxService emailOutboxService;
     @Mock
     private HashingService hashingService;
     @Mock
@@ -83,7 +86,7 @@ class WorkspaceInvitationImplTest {
 
         assertThat(response).isNotNull();
         verify(workspaceInvitationRepository).save(any(WorkspaceInvitation.class));
-        verify(emailService).sendWorkspaceInvitationEmail(eq("test@example.com"), any());
+        verify(emailOutboxService).queue(eq("test@example.com"), eq(EmailType.WORKSPACE_INVITATION), any());
     }
 
     @Test
@@ -94,7 +97,7 @@ class WorkspaceInvitationImplTest {
         currentUser.setEmail("test@example.com");
         Workspace workspace = new Workspace();
         workspace.setName("Test Workspace");
-        
+
         WorkspaceInvitation invitation = WorkspaceInvitation.builder()
                 .email("test@example.com")
                 .tokenHash(hashedToken)
@@ -121,7 +124,7 @@ class WorkspaceInvitationImplTest {
         String hashedToken = "hashed-token";
         User currentUser = new User();
         currentUser.setEmail("test@example.com");
-        
+
         WorkspaceInvitation invitation = WorkspaceInvitation.builder()
                 .email("test@example.com")
                 .tokenHash(hashedToken)

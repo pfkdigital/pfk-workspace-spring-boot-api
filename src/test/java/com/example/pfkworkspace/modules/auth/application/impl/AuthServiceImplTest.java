@@ -1,8 +1,9 @@
 package com.example.pfkworkspace.modules.auth.application.impl;
 
 import com.example.pfkworkspace.common.error.BadRequestException;
-import com.example.pfkworkspace.common.error.ConflictException;
 import com.example.pfkworkspace.common.util.CookieUtil;
+import com.example.pfkworkspace.modules.auth.api.EmailAlreadyExistsException;
+import com.example.pfkworkspace.modules.auth.api.UsernameAlreadyExistsException;
 import com.example.pfkworkspace.modules.auth.api.dto.*;
 import com.example.pfkworkspace.modules.auth.domain.EmailVerificationToken;
 import com.example.pfkworkspace.modules.auth.domain.RefreshToken;
@@ -10,6 +11,8 @@ import com.example.pfkworkspace.modules.auth.infrastructure.JwtUtility;
 import com.example.pfkworkspace.modules.auth.infrastructure.repo.EmailVerificationTokenRepository;
 import com.example.pfkworkspace.modules.auth.infrastructure.repo.PasswordResetTokenRepository;
 import com.example.pfkworkspace.modules.auth.infrastructure.repo.RefreshTokenRepository;
+import com.example.pfkworkspace.modules.email.application.EmailOutboxService;
+import com.example.pfkworkspace.modules.email.domain.EmailType;
 import com.example.pfkworkspace.modules.user.domain.User;
 import com.example.pfkworkspace.modules.user.infrastructure.repo.UserRepository;
 import jakarta.servlet.http.HttpServletResponse;
@@ -19,12 +22,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import org.springframework.http.ResponseCookie;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -32,13 +35,15 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceImplTest {
 
     @Mock
-    private EmailServiceImpl emailService;
+    private EmailOutboxService emailOutboxService;
     @Mock
     private EmailVerificationTokenRepository emailVerificationTokenRepository;
     @Mock
@@ -79,22 +84,22 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void register_WhenEmailAlreadyExists_ShouldThrowConflictException() {
+    void register_WhenEmailAlreadyExists_ShouldThrowEmailAlreadyExistsException() {
         when(userRepository.existsByEmail(registerRequest.email())).thenReturn(true);
 
         assertThatThrownBy(() -> authService.register(registerRequest))
-                .isInstanceOf(ConflictException.class)
-                .hasMessage("Email is already in use");
+                .isInstanceOf(EmailAlreadyExistsException.class)
+                .hasMessage("An account with this email address already exists");
     }
 
     @Test
-    void register_WhenUsernameAlreadyExists_ShouldThrowConflictException() {
+    void register_WhenUsernameAlreadyExists_ShouldThrowUsernameAlreadyExistsException() {
         when(userRepository.existsByEmail(registerRequest.email())).thenReturn(false);
         when(userRepository.existsByUsername(registerRequest.username())).thenReturn(true);
 
         assertThatThrownBy(() -> authService.register(registerRequest))
-                .isInstanceOf(ConflictException.class)
-                .hasMessage("Username is already in use");
+                .isInstanceOf(UsernameAlreadyExistsException.class)
+                .hasMessage("An account with this username already exists");
     }
 
     @Test
@@ -108,7 +113,7 @@ class AuthServiceImplTest {
         assertThat(response.getMessage()).contains("User registered successfully");
         verify(userRepository).save(any(User.class));
         verify(emailVerificationTokenRepository).save(any(EmailVerificationToken.class));
-        verify(emailService).sendVerificationEmail(eq("test@example.com"), anyString());
+        verify(emailOutboxService).queue(eq("test@example.com"), eq(EmailType.VERIFICATION), any());
     }
 
     @Test
@@ -136,7 +141,7 @@ class AuthServiceImplTest {
         assertThat(user.isEmailVerified()).isTrue();
         verify(userRepository).save(user);
         verify(emailVerificationTokenRepository).save(token);
-        verify(emailService).sendAccountVerifiedEmail(eq(user.getEmail()));
+        verify(emailOutboxService).queue(eq(user.getEmail()), eq(EmailType.ACCOUNT_VERIFIED));
     }
 
     @Test

@@ -2,7 +2,6 @@ package com.example.pfkworkspace.modules.workspace.application.impl;
 
 import com.example.pfkworkspace.modules.auth.application.UserContextService;
 import com.example.pfkworkspace.modules.user.domain.User;
-import com.example.pfkworkspace.modules.user.infrastructure.repo.UserRepository;
 import com.example.pfkworkspace.modules.workspace.api.dto.*;
 import com.example.pfkworkspace.modules.workspace.api.exception.WorkspaceMemberNotFoundException;
 import com.example.pfkworkspace.modules.workspace.api.exception.WorkspaceNotFoundException;
