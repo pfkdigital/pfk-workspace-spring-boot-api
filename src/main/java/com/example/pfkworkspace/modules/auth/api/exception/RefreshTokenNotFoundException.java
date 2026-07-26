@@ -1,4 +1,4 @@
-package com.example.pfkworkspace.modules.auth.api;
+package com.example.pfkworkspace.modules.auth.api.exception;
 
 public class RefreshTokenNotFoundException extends RuntimeException {
     public RefreshTokenNotFoundException(String message) {

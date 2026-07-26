@@ -6,7 +6,7 @@ import com.example.pfkworkspace.common.util.RandomTokenGenerator;
 import com.example.pfkworkspace.modules.auth.application.UserContextService;
 import com.example.pfkworkspace.modules.email.application.EmailOutboxService;
 import com.example.pfkworkspace.modules.email.domain.EmailType;
-import com.example.pfkworkspace.modules.user.api.UserNotFoundException;
+import com.example.pfkworkspace.modules.user.api.exception.UserNotFoundException;
 import com.example.pfkworkspace.modules.user.domain.User;
 import com.example.pfkworkspace.modules.user.infrastructure.repo.UserRepository;
 import com.example.pfkworkspace.modules.workspace.api.dto.CreateInvitationRequestDto;

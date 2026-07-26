@@ -1,4 +1,4 @@
-package com.example.pfkworkspace.modules.user.api;
+package com.example.pfkworkspace.modules.user.api.exception;
 
 import com.example.pfkworkspace.common.error.NotFoundException;
 

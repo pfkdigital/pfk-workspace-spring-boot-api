@@ -2,8 +2,8 @@ package com.example.pfkworkspace.modules.auth.application.impl;
 
 import com.example.pfkworkspace.common.error.BadRequestException;
 import com.example.pfkworkspace.common.util.CookieUtil;
-import com.example.pfkworkspace.modules.auth.api.EmailAlreadyExistsException;
-import com.example.pfkworkspace.modules.auth.api.UsernameAlreadyExistsException;
+import com.example.pfkworkspace.modules.auth.api.exception.EmailAlreadyExistsException;
+import com.example.pfkworkspace.modules.auth.api.exception.UsernameAlreadyExistsException;
 import com.example.pfkworkspace.modules.auth.api.dto.*;
 import com.example.pfkworkspace.modules.auth.domain.EmailVerificationToken;
 import com.example.pfkworkspace.modules.auth.domain.RefreshToken;

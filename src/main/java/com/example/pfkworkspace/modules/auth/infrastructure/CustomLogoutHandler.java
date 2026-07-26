@@ -2,11 +2,10 @@ package com.example.pfkworkspace.modules.auth.infrastructure;
 
 import com.example.pfkworkspace.common.util.CookieUtil;
 import com.example.pfkworkspace.modules.auth.api.dto.LogoutResponseDto;
-import com.example.pfkworkspace.modules.auth.api.RefreshTokenNotFoundException;
+import com.example.pfkworkspace.modules.auth.api.exception.RefreshTokenNotFoundException;
 import com.example.pfkworkspace.modules.auth.domain.RefreshToken;
 import com.example.pfkworkspace.modules.auth.infrastructure.repo.RefreshTokenRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
