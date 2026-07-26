@@ -25,43 +25,48 @@ import java.util.HexFormat;
 @RequiredArgsConstructor
 @Slf4j
 public class CustomLogoutHandler implements LogoutSuccessHandler {
-    private final CookieUtil cookieUtil;
-    private final ObjectMapper objectMapper;
-    private final RefreshTokenRepository refreshTokenRepository;
+  private final CookieUtil cookieUtil;
+  private final ObjectMapper objectMapper;
+  private final RefreshTokenRepository refreshTokenRepository;
 
   @Override
   public void onLogoutSuccess(
       HttpServletRequest request, HttpServletResponse response, Authentication authentication)
-      throws IOException, ServletException {
-      String accessToken = cookieUtil.getCookie(request, "access_token");
-      String refreshToken = cookieUtil.getCookie(request, "refresh_token");
+      throws IOException {
+    String refreshToken = cookieUtil.getCookie(request, "refresh_token");
 
-        if (refreshToken == null) {
-            log.warn("Logout attempted with no refresh token cookie");
-            throw new RefreshTokenNotFoundException("No refresh token found in cookies");
-        }
+    if (refreshToken == null) {
+      log.warn("Logout attempted with no refresh token cookie");
+      throw new RefreshTokenNotFoundException("No refresh token found in cookies");
+    }
 
-        RefreshToken refreshTokenEntity = refreshTokenRepository.findByTokenHash(sha256Hash(refreshToken)).orElseThrow(() -> new RefreshTokenNotFoundException("Refresh token not found in database"));
-      refreshTokenEntity.setRevoked(true);
-        refreshTokenRepository.save(refreshTokenEntity);
+    RefreshToken refreshTokenEntity =
+        refreshTokenRepository
+            .findByTokenHash(sha256Hash(refreshToken))
+            .orElseThrow(
+                () -> new RefreshTokenNotFoundException("Refresh token not found in database"));
+    refreshTokenEntity.setRevoked(true);
+    refreshTokenRepository.save(refreshTokenEntity);
 
-        cookieUtil.deleteCookie(response,"access_token");
-        cookieUtil.deleteCookie(response, "refresh_token");
-        log.info("User logged out: username={}", authentication != null ? authentication.getName() : "unknown");
-      LogoutResponseDto logoutResponse = new LogoutResponseDto("Successfully logged out");
-      response.setContentType("application/json");
-      response.setCharacterEncoding("UTF-8");
-      response.getWriter().write(objectMapper.writeValueAsString(logoutResponse));
-      response.getWriter().flush();
+    cookieUtil.deleteCookie(response, "access_token");
+    cookieUtil.deleteCookie(response, "refresh_token");
+    log.info(
+        "User logged out: username={}",
+        authentication != null ? authentication.getName() : "unknown");
+    LogoutResponseDto logoutResponse = new LogoutResponseDto("Successfully logged out");
+    response.setContentType("application/json");
+    response.setCharacterEncoding("UTF-8");
+    response.getWriter().write(objectMapper.writeValueAsString(logoutResponse));
+    response.getWriter().flush();
   }
 
-    private String sha256Hash(String rawToken) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hashBytes = digest.digest(rawToken.getBytes(StandardCharsets.UTF_8));
-            return HexFormat.of().formatHex(hashBytes);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Error hashing token", e);
-        }
+  private String sha256Hash(String rawToken) {
+    try {
+      MessageDigest digest = MessageDigest.getInstance("SHA-256");
+      byte[] hashBytes = digest.digest(rawToken.getBytes(StandardCharsets.UTF_8));
+      return HexFormat.of().formatHex(hashBytes);
+    } catch (NoSuchAlgorithmException e) {
+      throw new RuntimeException("Error hashing token", e);
     }
+  }
 }
