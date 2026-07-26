@@ -148,6 +148,21 @@ class EmailOutboxProcessorTest {
         verify(emailOutboxRepository, times(2)).save(any());
     }
 
+    @Test
+    void cleanUp_ShouldDeleteAllSentRecords() {
+        processor.cleanUp();
+
+        verify(emailOutboxRepository).deleteAllByStatus(SENT);
+    }
+
+    @Test
+    void cleanUp_ShouldNotTouchPendingOrFailedRecords() {
+        processor.cleanUp();
+
+        verify(emailOutboxRepository, never()).deleteAllByStatus(PENDING);
+        verify(emailOutboxRepository, never()).deleteAllByStatus(FAILED);
+    }
+
     private EmailOutbox pendingOutbox(EmailType type, Map<String, String> payload) {
         return EmailOutbox.builder()
                 .recipient("user@example.com")

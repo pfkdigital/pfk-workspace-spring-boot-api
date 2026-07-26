@@ -9,4 +9,5 @@ import java.util.UUID;
 
 public interface EmailOutboxRepository extends JpaRepository<EmailOutbox, UUID> {
     List<EmailOutbox> findAllByStatus(EmailOutboxStatus status);
+    void deleteAllByStatus(EmailOutboxStatus status);
 }
