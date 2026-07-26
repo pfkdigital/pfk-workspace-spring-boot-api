@@ -1,6 +1,8 @@
 package com.example.pfkworkspace.modules.auth.api;
 
-public class UsernameAlreadyExistsException extends RuntimeException {
+import com.example.pfkworkspace.common.error.ConflictException;
+
+public class UsernameAlreadyExistsException extends ConflictException {
     public UsernameAlreadyExistsException(String message) {
         super(message);
     }

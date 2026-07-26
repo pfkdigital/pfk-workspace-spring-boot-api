@@ -1,11 +1,7 @@
 package com.example.pfkworkspace.common.error;
 
 import com.example.pfkworkspace.common.api.ApiResponse;
-import com.example.pfkworkspace.modules.auth.api.EmailAlreadyExistsException;
 import com.example.pfkworkspace.modules.email.api.EmailSendingException;
-import com.example.pfkworkspace.modules.auth.api.UsernameAlreadyExistsException;
-import com.example.pfkworkspace.modules.user.api.UserNotFoundException;
-import com.example.pfkworkspace.modules.workspace.api.exception.WorkspaceNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import java.time.Instant;
 import java.util.List;
@@ -127,28 +123,6 @@ public class GlobalExceptionHandler {
     log.error("Email service failure: {}", ex.getMessage(), ex);
     String message = "Email service is temporarily unavailable. Please try again later.";
     return buildResponse(HttpStatus.BAD_GATEWAY, message);
-  }
-
-  @ExceptionHandler(EmailAlreadyExistsException.class)
-  public ResponseEntity<ApiResponse> handleEmailAlreadyExistsException(EmailAlreadyExistsException exception) {
-    log.warn("Registration attempt with existing email: {}", exception.getMessage());
-    return buildResponse(HttpStatus.CONFLICT,exception.getMessage());
-  }
-
-  @ExceptionHandler(UsernameAlreadyExistsException.class)
-  public ResponseEntity<ApiResponse> handleUsernameAlreadyExistsException(UsernameAlreadyExistsException exception) {
-    log.warn("Registration attempt with existing username: {}", exception.getMessage());
-    return buildResponse(HttpStatus.CONFLICT, exception.getMessage());
-  }
-
-  @ExceptionHandler(WorkspaceNotFoundException.class)
-  public ResponseEntity<ApiResponse> handleWorkspaceNotFound(WorkspaceNotFoundException exception) {
-    return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage());
-  }
-
-  @ExceptionHandler(UserNotFoundException.class)
-  public ResponseEntity<ApiResponse> handlingUserNotFound(UserNotFoundException exception) {
-    return buildResponse(HttpStatus.NOT_FOUND,exception.getMessage());
   }
 
   @ExceptionHandler(Exception.class)

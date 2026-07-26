@@ -1,6 +1,8 @@
 package com.example.pfkworkspace.modules.workspace.api.exception;
 
-public class WorkspaceNotFoundException extends RuntimeException {
+import com.example.pfkworkspace.common.error.NotFoundException;
+
+public class WorkspaceNotFoundException extends NotFoundException {
     public WorkspaceNotFoundException(String message) {
         super(message);
     }

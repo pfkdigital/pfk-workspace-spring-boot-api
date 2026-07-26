@@ -1,6 +1,8 @@
 package com.example.pfkworkspace.modules.auth.api;
 
-public class EmailAlreadyExistsException extends RuntimeException {
+import com.example.pfkworkspace.common.error.ConflictException;
+
+public class EmailAlreadyExistsException extends ConflictException {
     public EmailAlreadyExistsException(String message) {
         super(message);
     }
