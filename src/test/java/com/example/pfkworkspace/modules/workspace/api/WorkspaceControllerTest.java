@@ -8,6 +8,7 @@ import com.example.pfkworkspace.modules.auth.infrastructure.JwtAuthFilter;
 import com.example.pfkworkspace.modules.workspace.api.dto.*;
 import com.example.pfkworkspace.modules.workspace.application.WorkspaceInvitationService;
 import com.example.pfkworkspace.modules.workspace.application.WorkspaceService;
+import com.example.pfkworkspace.modules.workspace.domain.UpdateMemberRole;
 import com.example.pfkworkspace.modules.workspace.domain.WorkspaceRole;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -144,7 +145,7 @@ class WorkspaceControllerTest {
     @WithMockUser
     void updateMemberRole_ShouldReturnOk() throws Exception {
         UUID workspaceId = UUID.randomUUID();
-        UpdateMemberRoleRequestDto request = new UpdateMemberRoleRequestDto(UUID.randomUUID(), WorkspaceRole.ADMIN);
+        UpdateMemberRoleRequestDto request = new UpdateMemberRoleRequestDto(UUID.randomUUID(), UpdateMemberRole.ADMIN);
 
         mockMvc.perform(put("/api/v1/workspace/{workspaceId}/members", workspaceId)
                         .with(csrf())

@@ -1,6 +1,7 @@
 package com.example.pfkworkspace.modules.workspace.application;
 
 import com.example.pfkworkspace.modules.workspace.api.dto.*;
+import com.example.pfkworkspace.modules.workspace.domain.UpdateMemberRole;
 import com.example.pfkworkspace.modules.workspace.domain.WorkspaceRole;
 
 import java.util.List;
@@ -13,7 +14,7 @@ public interface WorkspaceService {
   WorkspaceDetailDto getWorkspaceDetail(UUID workspaceId);
   void deleteWorkspace(UUID workspaceId);
   void removeUserFromWorkspace(UUID workspaceId, UUID userId);
-  void updateMemberRole(UUID workspaceId, UUID userId, WorkspaceRole role);
+  void updateMemberRole(UUID workspaceId, UUID userId, UpdateMemberRole role);
   void transferOwnerShip(UUID workspaceId, UUID userId);
   void leaveWorkspace(UUID workspaceId);
 }

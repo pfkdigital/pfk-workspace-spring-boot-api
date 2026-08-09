@@ -82,14 +82,12 @@ public class WorkspaceController {
     return ResponseEntity.ok(apiResponse);
   }
 
-  // --- Member Operations ---
-
   @PutMapping("/{workspaceId}/members")
   public ResponseEntity<ApiResponse> updateMemberRole(
       @PathVariable UUID workspaceId,
       @Valid @RequestBody UpdateMemberRoleRequestDto updateMemberRoleRequestDto) {
     workspaceService.updateMemberRole(
-        workspaceId, updateMemberRoleRequestDto.getMemberId(), updateMemberRoleRequestDto.getRole());
+        workspaceId, updateMemberRoleRequestDto.memberId(), updateMemberRoleRequestDto.role());
     ApiResponse apiResponse =
         ApiResponse.builder()
             .success(true)

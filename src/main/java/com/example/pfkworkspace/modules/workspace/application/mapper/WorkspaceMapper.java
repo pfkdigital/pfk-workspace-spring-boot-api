@@ -1,5 +1,6 @@
 package com.example.pfkworkspace.modules.workspace.application.mapper;
 
+import com.example.pfkworkspace.modules.user.domain.User;
 import com.example.pfkworkspace.modules.workspace.api.dto.WorkspaceDetailDto;
 import com.example.pfkworkspace.modules.workspace.api.dto.WorkspaceSummaryDto;
 import com.example.pfkworkspace.modules.workspace.domain.Workspace;
@@ -35,7 +36,7 @@ public class WorkspaceMapper {
                 .build();
     }
 
-    private WorkspaceDetailDto.OwnerDto toOwnerDto(com.example.pfkworkspace.modules.user.domain.User owner) {
+    private WorkspaceDetailDto.OwnerDto toOwnerDto(User owner) {
         return WorkspaceDetailDto.OwnerDto.builder()
                 .id(owner.getId())
                 .username(owner.getUsername())

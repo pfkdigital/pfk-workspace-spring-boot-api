@@ -10,6 +10,7 @@ import com.example.pfkworkspace.modules.workspace.application.WorkspaceSecurityS
 import com.example.pfkworkspace.modules.workspace.application.mapper.WorkspaceMapper;
 import com.example.pfkworkspace.modules.workspace.domain.Workspace;
 import com.example.pfkworkspace.modules.workspace.domain.WorkspaceMember;
+import com.example.pfkworkspace.modules.workspace.domain.UpdateMemberRole;
 import com.example.pfkworkspace.modules.workspace.domain.WorkspaceRole;
 import com.example.pfkworkspace.modules.workspace.infrastructure.repo.WorkspaceMemberRepository;
 import com.example.pfkworkspace.modules.workspace.infrastructure.repo.WorkspaceRepository;
@@ -179,24 +180,10 @@ class WorkspaceServiceImplTest {
         when(workspaceMemberRepository.findByUserIdAndWorkspaceId(currentUser.getId(), workspaceId)).thenReturn(Optional.of(currentMember));
         when(workspaceMemberRepository.findByUserIdAndWorkspaceId(userId, workspaceId)).thenReturn(Optional.of(targetMember));
 
-        workspaceService.updateMemberRole(workspaceId, userId, WorkspaceRole.ADMIN);
+        workspaceService.updateMemberRole(workspaceId, userId, UpdateMemberRole.ADMIN);
 
         assertThat(targetMember.getRole()).isEqualTo(WorkspaceRole.ADMIN);
         verify(workspaceMemberRepository).save(targetMember);
-    }
-
-    @Test
-    void updateMemberRole_ToOwnerByNonOwner_ShouldThrowException() {
-        UUID userId = UUID.randomUUID();
-
-        WorkspaceMember currentMember = new WorkspaceMember();
-        currentMember.setRole(WorkspaceRole.ADMIN);
-
-        when(userContextService.getCurrentUser()).thenReturn(currentUser);
-        when(workspaceMemberRepository.findByUserIdAndWorkspaceId(currentUser.getId(), workspaceId)).thenReturn(Optional.of(currentMember));
-
-        assertThatThrownBy(() -> workspaceService.updateMemberRole(workspaceId, userId, WorkspaceRole.OWNER))
-                .isInstanceOf(AuthorizationDeniedException.class);
     }
 
     @Test
