@@ -1,6 +1,7 @@
 package com.example.pfkworkspace.modules.workspace.domain;
 
 import com.example.pfkworkspace.common.persistence.BaseEntity;
+import com.example.pfkworkspace.modules.project.domain.Project;
 import com.example.pfkworkspace.modules.user.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -38,6 +39,10 @@ public class Workspace extends BaseEntity {
   @Builder.Default
   @OneToMany(mappedBy = "workspace", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<WorkspaceInvitation> workspaceInvitations = new ArrayList<>();
+
+  @Builder.Default
+  @OneToMany(mappedBy = "workspace", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<Project> projects = new ArrayList<>();
 
   public void addWorkspaceMember(WorkspaceMember workspaceMember) {
     workspaceMember.setWorkspace(this);
