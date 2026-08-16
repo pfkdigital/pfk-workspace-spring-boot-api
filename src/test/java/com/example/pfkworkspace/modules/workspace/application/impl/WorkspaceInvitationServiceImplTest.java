@@ -67,7 +67,6 @@ class WorkspaceInvitationServiceImplTest {
         User user = userWithEmail("user@example.com");
         Workspace workspace = workspace("Test Workspace");
 
-        when(workspaceSecurityService.isOwnerOrAdmin(workspaceId)).thenReturn(true);
         when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
         when(workspaceInvitationRepository.existsByEmailAndWorkspace_IdAndIsUsedFalseAndExpiresAtAfter(
                 eq("user@example.com"), eq(workspaceId), any(Instant.class))).thenReturn(false);
@@ -83,21 +82,8 @@ class WorkspaceInvitationServiceImplTest {
     }
 
     @Test
-    void addMemberToWorkspace_WhenNotAuthorized_ShouldThrow() {
-        UUID workspaceId = UUID.randomUUID();
-        when(workspaceSecurityService.isOwnerOrAdmin(workspaceId)).thenReturn(false);
-
-        assertThatThrownBy(() -> service.addMemberToWorkspace(
-                new CreateInvitationRequestDto("user@example.com", WorkspaceRole.MEMBER), workspaceId))
-                .isInstanceOf(AuthorizationDeniedException.class);
-
-        verifyNoInteractions(userRepository, workspaceRepository, emailOutboxService);
-    }
-
-    @Test
     void addMemberToWorkspace_WhenUserNotFound_ShouldThrow() {
         UUID workspaceId = UUID.randomUUID();
-        when(workspaceSecurityService.isOwnerOrAdmin(workspaceId)).thenReturn(true);
         when(userRepository.findByEmail("unknown@example.com")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.addMemberToWorkspace(
@@ -110,7 +96,6 @@ class WorkspaceInvitationServiceImplTest {
         UUID workspaceId = UUID.randomUUID();
         User user = userWithEmail("user@example.com");
 
-        when(workspaceSecurityService.isOwnerOrAdmin(workspaceId)).thenReturn(true);
         when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
         when(workspaceInvitationRepository.existsByEmailAndWorkspace_IdAndIsUsedFalseAndExpiresAtAfter(
                 eq("user@example.com"), eq(workspaceId), any(Instant.class))).thenReturn(true);
@@ -126,7 +111,6 @@ class WorkspaceInvitationServiceImplTest {
         UUID workspaceId = UUID.randomUUID();
         User user = userWithEmail("user@example.com");
 
-        when(workspaceSecurityService.isOwnerOrAdmin(workspaceId)).thenReturn(true);
         when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
         when(workspaceInvitationRepository.existsByEmailAndWorkspace_IdAndIsUsedFalseAndExpiresAtAfter(
                 eq("user@example.com"), eq(workspaceId), any(Instant.class))).thenReturn(false);

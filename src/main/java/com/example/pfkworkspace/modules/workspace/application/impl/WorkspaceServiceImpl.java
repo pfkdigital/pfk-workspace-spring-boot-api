@@ -5,7 +5,6 @@ import com.example.pfkworkspace.modules.user.domain.User;
 import com.example.pfkworkspace.modules.workspace.api.dto.*;
 import com.example.pfkworkspace.modules.workspace.api.exception.WorkspaceMemberNotFoundException;
 import com.example.pfkworkspace.modules.workspace.api.exception.WorkspaceNotFoundException;
-import com.example.pfkworkspace.modules.workspace.application.WorkspaceSecurityService;
 import com.example.pfkworkspace.modules.workspace.application.WorkspaceService;
 import com.example.pfkworkspace.modules.workspace.application.mapper.WorkspaceMapper;
 import com.example.pfkworkspace.modules.workspace.domain.UpdateMemberRole;
@@ -16,6 +15,8 @@ import com.example.pfkworkspace.modules.workspace.infrastructure.repo.WorkspaceM
 import com.example.pfkworkspace.modules.workspace.infrastructure.repo.WorkspaceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.parameters.P;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +34,6 @@ public class WorkspaceServiceImpl implements WorkspaceService {
   private final WorkspaceMapper workspaceMapper;
   private final WorkspaceRepository workspaceRepository;
   private final WorkspaceMemberRepository workspaceMemberRepository;
-  private final WorkspaceSecurityService workspaceSecurityService;
 
   @Override
   @Transactional
@@ -77,8 +77,9 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
   @Override
   @Transactional
+  @PreAuthorize("@workspaceSecurity.isOwner(#workspaceId)")
   public UpdateWorkspaceResponseDto updateWorkspace(
-      UUID workspaceId, UpdateWorkspaceRequestDto updateWorkspaceRequestDto) {
+      @P("workspaceId") UUID workspaceId, UpdateWorkspaceRequestDto updateWorkspaceRequestDto) {
     Workspace workspace =
         workspaceRepository
             .findById(workspaceId)
@@ -86,12 +87,6 @@ public class WorkspaceServiceImpl implements WorkspaceService {
                 () ->
                     new WorkspaceNotFoundException(
                         "Workspace not found with this id " + workspaceId));
-
-    boolean isOwner = workspaceSecurityService.isOwner(workspaceId);
-    if (!isOwner) {
-      throw new AuthorizationDeniedException(
-          "Only the owner of the current workspace can edit the workspace");
-    }
 
     workspace.setName(updateWorkspaceRequestDto.name());
     workspace.setDescription(updateWorkspaceRequestDto.description());
@@ -121,7 +116,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
   @Override
   @Transactional(readOnly = true)
-  public WorkspaceDetailDto getWorkspaceDetail(UUID workspaceId) {
+  @PreAuthorize("@workspaceSecurity.isMember(#workspaceId)")
+  public WorkspaceDetailDto getWorkspaceDetail(@P("workspaceId") UUID workspaceId) {
 
     Workspace workspace =
         workspaceRepository
@@ -130,28 +126,19 @@ public class WorkspaceServiceImpl implements WorkspaceService {
                 () ->
                     new WorkspaceNotFoundException("Workspace not found, with ID: " + workspaceId));
 
-    if (!workspaceSecurityService.isMember(workspaceId)) {
-      throw new AuthorizationDeniedException("Not a member of this workspace");
-    }
-
     return workspaceMapper.toDetailDto(workspace);
   }
 
   @Override
   @Transactional
-  public void deleteWorkspace(UUID workspaceId) {
+  @PreAuthorize("@workspaceSecurity.isOwner(#workspaceId)")
+  public void deleteWorkspace(@P("workspaceId") UUID workspaceId) {
     Workspace workspace =
         workspaceRepository
             .findById(workspaceId)
             .orElseThrow(
                 () ->
                     new WorkspaceNotFoundException("Workspace not found with id: " + workspaceId));
-
-    boolean isOwner = workspaceSecurityService.isOwner(workspaceId);
-    if (!isOwner) {
-      throw new AuthorizationDeniedException(
-          "Only the owner of a workspace can delete the workspace");
-    }
 
     workspaceRepository.delete(workspace);
 
@@ -160,18 +147,14 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
   @Override
   @Transactional
-  public void removeUserFromWorkspace(UUID workspaceId, UUID userId) {
+  @PreAuthorize("@workspaceSecurity.isOwnerOrAdmin(#workspaceId)")
+  public void removeUserFromWorkspace(@P("workspaceId") UUID workspaceId, UUID userId) {
     Workspace workspace =
         workspaceRepository
             .findById(workspaceId)
             .orElseThrow(
                 () ->
                     new WorkspaceNotFoundException("Workspace not found with id: " + workspaceId));
-
-    if (!workspaceSecurityService.isOwnerOrAdmin(workspaceId)) {
-      throw new AuthorizationDeniedException(
-          "Only owners and admins are allowed to remove users from a workspace");
-    }
 
     WorkspaceMember workspaceMember =
         workspaceMemberRepository
@@ -210,6 +193,11 @@ public class WorkspaceServiceImpl implements WorkspaceService {
                 () ->
                     new WorkspaceMemberNotFoundException(
                         "Workspace member not found with user id " + userId));
+
+    if (targetMember.getRole() == WorkspaceRole.OWNER) {
+      throw new AuthorizationDeniedException(
+          "Cannot change the role of the workspace owner this way; use transferOwnerShip instead");
+    }
 
     WorkspaceRole workspaceRole =
         switch (role) {

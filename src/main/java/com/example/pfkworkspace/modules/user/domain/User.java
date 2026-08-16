@@ -59,6 +59,7 @@ public class User extends BaseEntity implements UserDetails {
   @Column(name = "last_login_at")
   private Instant lastLoginAt;
 
+  @Builder.Default
   @ElementCollection(fetch = FetchType.EAGER)
   @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
   @Column(nullable = false, name = "role")

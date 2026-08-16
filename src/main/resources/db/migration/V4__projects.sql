@@ -12,8 +12,7 @@ CREATE TABLE projects
     archived_at        TIMESTAMP,
     created_by_user_id UUID                  REFERENCES users (id) ON DELETE SET NULL,
     created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (workspace_id)
+    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX projects_workspace_id_idx ON projects (workspace_id);
 CREATE INDEX projects_created_by_user_id_idx ON projects (created_by_user_id);

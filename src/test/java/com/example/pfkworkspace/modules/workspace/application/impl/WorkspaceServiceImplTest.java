@@ -6,7 +6,6 @@ import com.example.pfkworkspace.modules.user.infrastructure.repo.UserRepository;
 import com.example.pfkworkspace.modules.workspace.api.dto.*;
 import com.example.pfkworkspace.modules.workspace.api.exception.WorkspaceMemberNotFoundException;
 import com.example.pfkworkspace.modules.workspace.api.exception.WorkspaceNotFoundException;
-import com.example.pfkworkspace.modules.workspace.application.WorkspaceSecurityService;
 import com.example.pfkworkspace.modules.workspace.application.mapper.WorkspaceMapper;
 import com.example.pfkworkspace.modules.workspace.domain.Workspace;
 import com.example.pfkworkspace.modules.workspace.domain.WorkspaceMember;
@@ -46,8 +45,6 @@ class WorkspaceServiceImplTest {
     private WorkspaceRepository workspaceRepository;
     @Mock
     private WorkspaceMemberRepository workspaceMemberRepository;
-    @Mock
-    private WorkspaceSecurityService workspaceSecurityService;
 
     @InjectMocks
     private WorkspaceServiceImpl workspaceService;
@@ -97,7 +94,6 @@ class WorkspaceServiceImplTest {
     @Test
     void updateWorkspace_WhenOwner_ShouldUpdateSuccessfully() {
         UpdateWorkspaceRequestDto request = new UpdateWorkspaceRequestDto("Updated Name", "Updated Desc", "http://image.url");
-        when(workspaceSecurityService.isOwner(workspaceId)).thenReturn(true);
         when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.of(workspace));
         when(workspaceRepository.save(any(Workspace.class))).thenReturn(workspace);
 
@@ -106,15 +102,6 @@ class WorkspaceServiceImplTest {
         assertThat(response).isNotNull();
         assertThat(response.getName()).isEqualTo("Updated Name");
         verify(workspaceRepository).save(workspace);
-    }
-
-    @Test
-    void updateWorkspace_WhenNotOwner_ShouldThrowException() {
-        UpdateWorkspaceRequestDto request = new UpdateWorkspaceRequestDto("Updated Name", "Updated Desc", null);
-        when(workspaceSecurityService.isOwner(workspaceId)).thenReturn(false);
-
-        assertThatThrownBy(() -> workspaceService.updateWorkspace(workspaceId, request))
-                .isInstanceOf(AuthorizationDeniedException.class);
     }
 
     @Test
@@ -131,7 +118,6 @@ class WorkspaceServiceImplTest {
 
     @Test
     void getWorkspaceDetail_WhenMember_ShouldReturnDetail() {
-        when(workspaceSecurityService.isMember(workspaceId)).thenReturn(true);
         when(workspaceRepository.findByIdWithDetails(workspaceId)).thenReturn(Optional.of(workspace));
         when(workspaceMapper.toDetailDto(workspace)).thenReturn(WorkspaceDetailDto.builder().id(workspaceId).name("Test Workspace").build());
 
@@ -143,7 +129,6 @@ class WorkspaceServiceImplTest {
 
     @Test
     void deleteWorkspace_WhenOwner_ShouldDelete() {
-        when(workspaceSecurityService.isOwner(workspaceId)).thenReturn(true);
         when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.of(workspace));
 
         workspaceService.deleteWorkspace(workspaceId);
@@ -156,8 +141,7 @@ class WorkspaceServiceImplTest {
         UUID userIdToRemove = UUID.randomUUID();
         WorkspaceMember memberToRemove = new WorkspaceMember();
         memberToRemove.setId(userIdToRemove);
-        
-        when(workspaceSecurityService.isOwnerOrAdmin(workspaceId)).thenReturn(true);
+
         when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.of(workspace));
         when(workspaceMemberRepository.findByUserIdAndWorkspaceId(userIdToRemove, workspaceId)).thenReturn(Optional.of(memberToRemove));
 
@@ -184,6 +168,27 @@ class WorkspaceServiceImplTest {
 
         assertThat(targetMember.getRole()).isEqualTo(WorkspaceRole.ADMIN);
         verify(workspaceMemberRepository).save(targetMember);
+    }
+
+    @Test
+    void updateMemberRole_WhenTargetIsOwner_ShouldThrowException() {
+        UUID userId = UUID.randomUUID();
+
+        WorkspaceMember currentMember = new WorkspaceMember();
+        currentMember.setRole(WorkspaceRole.ADMIN);
+
+        WorkspaceMember targetMember = new WorkspaceMember();
+        targetMember.setRole(WorkspaceRole.OWNER);
+
+        when(userContextService.getCurrentUser()).thenReturn(currentUser);
+        when(workspaceMemberRepository.findByUserIdAndWorkspaceId(currentUser.getId(), workspaceId)).thenReturn(Optional.of(currentMember));
+        when(workspaceMemberRepository.findByUserIdAndWorkspaceId(userId, workspaceId)).thenReturn(Optional.of(targetMember));
+
+        assertThatThrownBy(() -> workspaceService.updateMemberRole(workspaceId, userId, UpdateMemberRole.MEMBER))
+                .isInstanceOf(AuthorizationDeniedException.class);
+
+        assertThat(targetMember.getRole()).isEqualTo(WorkspaceRole.OWNER);
+        verify(workspaceMemberRepository, never()).save(targetMember);
     }
 
     @Test

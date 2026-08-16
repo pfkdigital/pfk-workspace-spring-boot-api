@@ -26,6 +26,8 @@ import com.example.pfkworkspace.modules.workspace.infrastructure.repo.WorkspaceR
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.parameters.P;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,13 +56,9 @@ public class WorkspaceInvitationServiceImpl implements WorkspaceInvitationServic
 
   @Override
   @Transactional
+  @PreAuthorize("@workspaceSecurity.isOwnerOrAdmin(#workspaceId)")
   public InvitationResponseDto addMemberToWorkspace(
-      CreateInvitationRequestDto createInvitationRequestDto, UUID workspaceId) {
-    if (!workspaceSecurityService.isOwnerOrAdmin(workspaceId)) {
-      throw new AuthorizationDeniedException(
-          "You must be a user or admin of the workspace to add a new member");
-    }
-
+      CreateInvitationRequestDto createInvitationRequestDto, @P("workspaceId") UUID workspaceId) {
     User derivedUser =
         userRepository
             .findByEmail(createInvitationRequestDto.email())

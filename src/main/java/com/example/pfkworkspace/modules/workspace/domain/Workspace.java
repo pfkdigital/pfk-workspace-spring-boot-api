@@ -58,4 +58,14 @@ public class Workspace extends BaseEntity {
     workspaceMembers.remove(workspaceMember);
     workspaceMember.setWorkspace(null);
   }
+
+  public void addProject(Project project) {
+    project.setWorkspace(this);
+    projects.add(project);
+  }
+
+  public void removeProject(Project project) {
+    projects.remove(project);
+    project.setWorkspace(null);
+  }
 }
