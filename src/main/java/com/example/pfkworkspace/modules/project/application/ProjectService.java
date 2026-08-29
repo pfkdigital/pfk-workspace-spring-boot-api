@@ -12,4 +12,7 @@ public interface ProjectService {
     UpdateProjectResponseDto updateProject(UUID workspaceId, UUID projectId, UpdateProjectRequestDto requestDto);
     void deleteProject(UUID workspaceId, UUID projectId);
     ArchiveProjectResponseDto archiveProject(UUID workspaceId, UUID projectId);
+    RestoreProjectResponseDto restoreProject(UUID workspaceId, UUID projectId);
+    AddProjectLinkResponseDto addLink(UUID workspaceId, UUID projectId,CreateProjectLinkRequestDto link);
+    RemoveProjectLinkResponseDto removeLink(UUID workspaceId, UUID projectId, UUID projectLinkId);
 }

@@ -45,7 +45,8 @@ public class ProjectController {
   @GetMapping("/{workspaceId}/projects/{projectId}")
   public ResponseEntity<ApiResponse> getProjectDetail(
       @PathVariable UUID workspaceId, @PathVariable UUID projectId) {
-    ProjectDetailResponseDto projectDetail = projectService.getProjectDetail(workspaceId, projectId);
+    ProjectDetailResponseDto projectDetail =
+        projectService.getProjectDetail(workspaceId, projectId);
     ApiResponse apiResponse =
         ApiResponse.builder()
             .success(true)
@@ -94,6 +95,44 @@ public class ProjectController {
             .message("Project archived successfully")
             .build();
 
+    return ResponseEntity.ok(apiResponse);
+  }
+
+  @PostMapping("/{workspaceId}/projects/{projectId}/restore")
+  public ResponseEntity<ApiResponse> restoreProject(
+      @PathVariable UUID workspaceId, @PathVariable UUID projectId) {
+    RestoreProjectResponseDto responseDto = projectService.restoreProject(workspaceId, projectId);
+    ApiResponse apiResponse =
+        ApiResponse.builder()
+            .success(true)
+            .data(responseDto)
+            .message("Project restored successfully")
+            .build();
+
+    return ResponseEntity.ok(apiResponse);
+  }
+
+  @PatchMapping("/{workspaceId}/projects/{projectId}/links")
+  public ResponseEntity<ApiResponse> addProjectLink(
+      @PathVariable UUID workspaceId,
+      @PathVariable UUID projectId,
+      @Valid CreateProjectLinkRequestDto createProjectLinkRequestDto) {
+    AddProjectLinkResponseDto responseDto =
+        projectService.addLink(workspaceId, projectId, createProjectLinkRequestDto);
+    ApiResponse apiResponse =
+        ApiResponse.builder().success(true).data(responseDto).message("Project link added").build();
+    return ResponseEntity.ok(apiResponse);
+  }
+
+  @DeleteMapping("/{workspaceId}/projects/{projectId}/links/{projectLinkId}")
+  public ResponseEntity<ApiResponse> deleteProjectLink(
+      @PathVariable UUID workspaceId,
+      @PathVariable UUID projectId,
+      @PathVariable UUID projectLinkId) {
+    RemoveProjectLinkResponseDto responseDto =
+        projectService.removeLink(workspaceId, projectId, projectLinkId);
+    ApiResponse apiResponse =
+        ApiResponse.builder().success(true).data(responseDto).message("Project link added").build();
     return ResponseEntity.ok(apiResponse);
   }
 }
