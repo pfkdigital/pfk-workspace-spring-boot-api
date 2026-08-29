@@ -2,6 +2,7 @@ package com.example.pfkworkspace.modules.task.application.mapper;
 
 import com.example.pfkworkspace.modules.label.domain.Label;
 import com.example.pfkworkspace.modules.task.api.dto.response.CreateTaskResponseDto;
+import com.example.pfkworkspace.modules.task.api.dto.response.SubtaskResponseDto;
 import com.example.pfkworkspace.modules.task.api.dto.response.TaskDetailResponseDto;
 import com.example.pfkworkspace.modules.task.api.dto.response.TaskResponseDto;
 import com.example.pfkworkspace.modules.task.domain.Attachment;
@@ -154,6 +155,17 @@ public class TaskMapper {
                 .author(toUserSummaryDto(comment.getAuthor()))
                 .editedAt(comment.getEditedAt())
                 .createdAt(comment.getCreatedAt())
+                .build();
+    }
+
+    public SubtaskResponseDto toSubtaskResponseDto(Subtask subtask) {
+        return SubtaskResponseDto.builder()
+                .id(subtask.getId())
+                .taskId(subtask.getTask().getId())
+                .title(subtask.getTitle())
+                .done(subtask.isDone())
+                .createdAt(subtask.getCreatedAt())
+                .updatedAt(subtask.getUpdatedAt())
                 .build();
     }
 }

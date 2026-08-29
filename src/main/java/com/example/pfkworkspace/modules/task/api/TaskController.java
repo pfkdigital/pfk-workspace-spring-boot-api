@@ -2,13 +2,8 @@ package com.example.pfkworkspace.modules.task.api;
 
 import com.example.pfkworkspace.common.api.ApiResponse;
 import com.example.pfkworkspace.common.api.PageResponse;
-import com.example.pfkworkspace.modules.task.api.dto.request.CreateTaskRequestDto;
-import com.example.pfkworkspace.modules.task.api.dto.request.UpdateTaskAssigneeRequestDto;
-import com.example.pfkworkspace.modules.task.api.dto.request.UpdateTaskRequestDto;
-import com.example.pfkworkspace.modules.task.api.dto.request.UpdateTaskStatusRequestDto;
-import com.example.pfkworkspace.modules.task.api.dto.response.CreateTaskResponseDto;
-import com.example.pfkworkspace.modules.task.api.dto.response.TaskDetailResponseDto;
-import com.example.pfkworkspace.modules.task.api.dto.response.TaskResponseDto;
+import com.example.pfkworkspace.modules.task.api.dto.request.*;
+import com.example.pfkworkspace.modules.task.api.dto.response.*;
 import com.example.pfkworkspace.modules.task.application.TaskService;
 import jakarta.validation.Valid;
 import java.util.UUID;
@@ -116,12 +111,60 @@ public class TaskController {
       @PathVariable UUID workspaceId, @PathVariable UUID projectId, @PathVariable UUID taskId) {
     taskService.deleteTask(workspaceId, projectId, taskId);
     ApiResponse apiResponse =
+        ApiResponse.builder().success(true).data(null).message("Task deleted successfully").build();
+
+    return ResponseEntity.ok(apiResponse);
+  }
+
+  @PutMapping("/{workspaceId}/projects/{projectId}/tasks/{taskId}/subtasks")
+  public ResponseEntity<ApiResponse> addSubtasks(
+      @PathVariable UUID workspaceId,
+      @PathVariable UUID projectId,
+      @PathVariable UUID taskId,
+      @Valid @RequestBody AddSubtaskRequestDto requestDto) {
+    SubtaskResponseDto responseDto =
+        taskService.addSubtask(workspaceId, projectId, taskId, requestDto);
+    ApiResponse apiResponse =
         ApiResponse.builder()
             .success(true)
-            .data(null)
-            .message("Task deleted successfully")
+            .data(responseDto)
+            .message("Subtask added successfully")
             .build();
+    return ResponseEntity.ok(apiResponse);
+  }
 
+  @DeleteMapping("/{workspaceId}/projects/{projectId}/tasks/{taskId}/subtasks/{subTaskId}")
+  public ResponseEntity<ApiResponse> removeSubtasks(
+      @PathVariable UUID workspaceId,
+      @PathVariable UUID projectId,
+      @PathVariable UUID taskId,
+      @PathVariable UUID subTaskId) {
+    RemoveSubtaskResponseDto responseDto =
+        taskService.removeSubtask(workspaceId, projectId, taskId, subTaskId);
+    ApiResponse apiResponse =
+        ApiResponse.builder()
+            .success(true)
+            .data(responseDto)
+            .message("Subtask removed successfully")
+            .build();
+    return ResponseEntity.ok(apiResponse);
+  }
+
+  @PatchMapping("/{workspaceId}/projects/{projectId}/tasks/{taskId}/subtasks/{subTaskId}")
+  public ResponseEntity<ApiResponse> updateSubTask(
+      @PathVariable UUID workspaceId,
+      @PathVariable UUID projectId,
+      @PathVariable UUID taskId,
+      @PathVariable UUID subTaskId,
+      @Valid @RequestBody UpdateSubtaskRequestDto requestDto) {
+    SubtaskResponseDto responseDto =
+        taskService.updateSubtask(workspaceId, projectId, taskId, subTaskId, requestDto);
+    ApiResponse apiResponse =
+        ApiResponse.builder()
+            .success(true)
+            .data(responseDto)
+            .message("Subtask updated successfully")
+            .build();
     return ResponseEntity.ok(apiResponse);
   }
 }
