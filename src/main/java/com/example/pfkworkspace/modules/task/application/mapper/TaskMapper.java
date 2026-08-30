@@ -1,6 +1,7 @@
 package com.example.pfkworkspace.modules.task.application.mapper;
 
 import com.example.pfkworkspace.modules.label.domain.Label;
+import com.example.pfkworkspace.modules.task.api.dto.response.AddCommentResponseDto;
 import com.example.pfkworkspace.modules.task.api.dto.response.CreateTaskResponseDto;
 import com.example.pfkworkspace.modules.task.api.dto.response.SubtaskResponseDto;
 import com.example.pfkworkspace.modules.task.api.dto.response.TaskDetailResponseDto;
@@ -166,6 +167,27 @@ public class TaskMapper {
                 .done(subtask.isDone())
                 .createdAt(subtask.getCreatedAt())
                 .updatedAt(subtask.getUpdatedAt())
+                .build();
+    }
+
+    public AddCommentResponseDto toAddCommentResponseDto(Comment comment) {
+        return AddCommentResponseDto.builder()
+                .id(comment.getId())
+                .taskId(comment.getTask().getId())
+                .body(comment.getBody())
+                .author(toAddCommentAuthorDto(comment.getAuthor()))
+                .editedAt(comment.getEditedAt())
+                .createdAt(comment.getCreatedAt())
+                .updatedAt(comment.getUpdatedAt())
+                .build();
+    }
+
+    private AddCommentResponseDto.AuthorDto toAddCommentAuthorDto(User user) {
+        return AddCommentResponseDto.AuthorDto.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
                 .build();
     }
 }

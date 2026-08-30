@@ -19,6 +19,19 @@ services:
       retries: 20
     networks:
       - pfk-workspace
+  cache:
+    image: redis:7-alpine
+    container_name: pfk-workspace-cache
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - pfk-workspace
 
 networks:
   pfk-workspace:

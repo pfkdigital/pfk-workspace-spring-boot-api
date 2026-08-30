@@ -1,14 +1,10 @@
 package com.example.pfkworkspace.modules.task.application;
 
-import com.example.pfkworkspace.modules.task.api.dto.request.AddSubtaskRequestDto;
 import com.example.pfkworkspace.modules.task.api.dto.request.CreateTaskRequestDto;
-import com.example.pfkworkspace.modules.task.api.dto.request.UpdateSubtaskRequestDto;
 import com.example.pfkworkspace.modules.task.api.dto.request.UpdateTaskAssigneeRequestDto;
 import com.example.pfkworkspace.modules.task.api.dto.request.UpdateTaskRequestDto;
 import com.example.pfkworkspace.modules.task.api.dto.request.UpdateTaskStatusRequestDto;
 import com.example.pfkworkspace.modules.task.api.dto.response.CreateTaskResponseDto;
-import com.example.pfkworkspace.modules.task.api.dto.response.RemoveSubtaskResponseDto;
-import com.example.pfkworkspace.modules.task.api.dto.response.SubtaskResponseDto;
 import com.example.pfkworkspace.modules.task.api.dto.response.TaskDetailResponseDto;
 import com.example.pfkworkspace.modules.task.api.dto.response.TaskResponseDto;
 
@@ -24,7 +20,4 @@ public interface TaskService {
     TaskDetailResponseDto updateTaskAssignee(UUID workspaceId, UUID projectId, UUID taskId, UpdateTaskAssigneeRequestDto requestDto);
     TaskDetailResponseDto updateTask(UUID workspaceId, UUID projectId, UUID taskId, UpdateTaskRequestDto requestDto);
     void deleteTask(UUID workspaceId, UUID projectId, UUID taskId);
-    SubtaskResponseDto addSubtask(UUID workspaceId, UUID projectId, UUID taskId, AddSubtaskRequestDto requestDto);
-    RemoveSubtaskResponseDto removeSubtask(UUID workspaceId, UUID projectId, UUID taskId, UUID subtaskId);
-    SubtaskResponseDto updateSubtask(UUID workspaceId, UUID projectId, UUID taskId, UUID subtaskId, UpdateSubtaskRequestDto requestDto);
 }
