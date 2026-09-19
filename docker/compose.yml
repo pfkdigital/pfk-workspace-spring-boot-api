@@ -32,10 +32,36 @@ services:
       retries: 20
     networks:
       - pfk-workspace
+  localstack:
+    image: localstack/localstack:4
+    container_name: pfk-workspace-localstack
+    restart: unless-stopped
+    environment:
+      SERVICES: s3,sns,sqs,lambda
+      AWS_DEFAULT_REGION: ${AWS_REGION:-eu-west-2}
+      DEBUG: ${LOCALSTACK_DEBUG:-0}
+      LAMBDA_DOCKER_NETWORK: pfk-workspace
+    ports:
+      - "${LOCALSTACK_PORT:-4566}:4566"
+    volumes:
+      - pfk_workspace_localstack:/var/lib/localstack
+      - ./localstack/init:/etc/localstack/init/ready.d:ro
+      - ./localstack/lambda:/opt/lambda:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      # ready.d init scripts (bucket/topic/lambda setup) must have finished
+      test: ["CMD-SHELL", "curl -sf http://localhost:4566/_localstack/init/ready | grep -q '\"completed\": true'"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    networks:
+      - pfk-workspace
 
 networks:
   pfk-workspace:
+    name: pfk-workspace
     driver: bridge
 
 volumes:
   pfk_workspace_db:
+  pfk_workspace_localstack:
