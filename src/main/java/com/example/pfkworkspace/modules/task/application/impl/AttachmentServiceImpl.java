@@ -1,9 +1,13 @@
 package com.example.pfkworkspace.modules.task.application.impl;
 
 import com.example.pfkworkspace.common.aws.service.S3Service;
+import com.example.pfkworkspace.common.error.ConflictException;
 import com.example.pfkworkspace.modules.auth.application.UserContextService;
 import com.example.pfkworkspace.modules.task.api.dto.request.CreateAttachmentRequestDto;
 import com.example.pfkworkspace.modules.task.api.dto.response.CreateAttachmentResponseDto;
+import com.example.pfkworkspace.modules.task.api.dto.response.GetAttachmentResponseDto;
+import com.example.pfkworkspace.modules.task.api.dto.response.RemoveAttachmentResponseDto;
+import com.example.pfkworkspace.modules.task.api.exception.AttachmentNotFoundException;
 import com.example.pfkworkspace.modules.task.application.AttachmentService;
 import com.example.pfkworkspace.modules.task.application.TaskAccessService;
 import com.example.pfkworkspace.modules.task.application.messaging.ScanResultMessage;
@@ -27,12 +31,18 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 public class AttachmentServiceImpl implements AttachmentService {
-  private static final Duration UPLOAD_URL_EXPIRY = Duration.ofMinutes(15);
+  private static final Duration URL_EXPIRY = Duration.ofMinutes(15);
 
   private final AttachmentRepository attachmentRepository;
   private final TaskAccessService taskAccessService;
   private final UserContextService userContextService;
   private final S3Service s3Service;
+
+  private static String buildStorageKey(
+      UUID workspaceId, UUID projectId, UUID taskId, String extension) {
+    return "workspaces/%s/projects/%s/tasks/%s/attachments/%s.%s"
+        .formatted(workspaceId, projectId, taskId, UUID.randomUUID(), extension);
+  }
 
   @Override
   @Transactional
@@ -68,7 +78,7 @@ public class AttachmentServiceImpl implements AttachmentService {
 
     String preSignedUrl =
         s3Service.generateUploadUrl(
-            storageKey, request.contentType(), request.sizeBytes(), checksum, UPLOAD_URL_EXPIRY);
+            storageKey, request.contentType(), request.sizeBytes(), checksum, URL_EXPIRY);
     log.info(
         "Created attachment {} for task {} with storage key {}",
         attachment.getId(),
@@ -79,6 +89,69 @@ public class AttachmentServiceImpl implements AttachmentService {
         .filename(attachment.getFilename())
         .preSignedUrl(preSignedUrl)
         .status(attachment.getStatus())
+        .build();
+  }
+
+  @Override
+  @PreAuthorize("@workspaceSecurity.isMember(#workspaceId)")
+  @Transactional(readOnly = true)
+  public GetAttachmentResponseDto getAttachment(
+      UUID workspaceId, UUID projectId, UUID taskId, UUID attachmentId) {
+    Task task = taskAccessService.getTaskInWorkspaceProject(workspaceId, projectId, taskId);
+    Attachment attachment =
+        attachmentRepository
+            .findByIdAndTaskId(attachmentId, task.getId())
+            .orElseThrow(
+                () ->
+                    new AttachmentNotFoundException(
+                        "Attachment not found with id " + attachmentId));
+
+    if (attachment.getStatus() != AttachmentStatus.READY) {
+      throw new ConflictException("Attachment not ready with id " + attachmentId);
+    }
+
+    return GetAttachmentResponseDto.builder()
+        .presignedUrl(
+            s3Service.generateDownloadUrl(
+                attachment.getStorageKey(),
+                attachment.getContentType(),
+                attachment.getFilename(),
+                URL_EXPIRY))
+        .attachmentId(attachment.getId())
+        .fileName(attachment.getFilename())
+        .contentType(attachment.getContentType())
+        .attachmentSize(attachment.getSizeBytes())
+        .attachmentId(attachmentId)
+        .build();
+  }
+
+  @Override
+  @Transactional
+  @PreAuthorize("@workspaceSecurity.isOwnerOrAdmin(#workspaceId)")
+  public RemoveAttachmentResponseDto deleteAttachment(
+      UUID workspaceId, UUID projectId, UUID taskId, UUID attachmentId) {
+    Task task = taskAccessService.getTaskInWorkspaceProject(workspaceId, projectId, taskId);
+
+    Attachment attachment =
+        attachmentRepository
+            .findByIdAndTaskId(attachmentId, taskId)
+            .orElseThrow(
+                () ->
+                    new AttachmentNotFoundException(
+                        "Attachment not found with id " + attachmentId));
+
+    task.removeAttachment(attachment);
+    attachmentRepository.delete(attachment);
+
+    if (attachment.getStatus() == AttachmentStatus.READY) {
+      s3Service.deleteObject(attachment.getStorageKey());
+    } else {
+      s3Service.deleteQuarantinedObject(attachment.getStorageKey());
+    }
+
+    return RemoveAttachmentResponseDto.builder()
+        .attachmentId(attachment.getId())
+        .taskId(task.getId())
         .build();
   }
 
@@ -119,11 +192,5 @@ public class AttachmentServiceImpl implements AttachmentService {
     }
     attachment.setStatus(next);
     attachmentRepository.save(attachment);
-  }
-
-  private static String buildStorageKey(
-      UUID workspaceId, UUID projectId, UUID taskId, String extension) {
-    return "workspaces/%s/projects/%s/tasks/%s/attachments/%s.%s"
-        .formatted(workspaceId, projectId, taskId, UUID.randomUUID(), extension);
   }
 }

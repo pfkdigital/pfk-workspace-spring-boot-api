@@ -1,6 +1,7 @@
 package com.example.pfkworkspace.common.error;
 
 import com.example.pfkworkspace.common.api.ApiResponse;
+import com.example.pfkworkspace.common.aws.StorageException;
 import com.example.pfkworkspace.modules.email.api.EmailSendingException;
 import jakarta.validation.ConstraintViolationException;
 import java.time.Instant;
@@ -122,6 +123,13 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ApiResponse> handleEmailSending(EmailSendingException ex) {
     log.error("Email service failure: {}", ex.getMessage(), ex);
     String message = "Email service is temporarily unavailable. Please try again later.";
+    return buildResponse(HttpStatus.BAD_GATEWAY, message);
+  }
+
+  @ExceptionHandler(StorageException.class)
+  public ResponseEntity<ApiResponse> handleStorage(StorageException ex) {
+    log.error("Storage service failure: {}", ex.getMessage(), ex);
+    String message = "File storage is temporarily unavailable. Please try again later.";
     return buildResponse(HttpStatus.BAD_GATEWAY, message);
   }
 
