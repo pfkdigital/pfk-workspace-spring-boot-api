@@ -11,6 +11,7 @@ import com.example.pfkworkspace.modules.task.api.exception.AttachmentNotFoundExc
 import com.example.pfkworkspace.modules.task.application.AttachmentService;
 import com.example.pfkworkspace.modules.task.application.TaskAccessService;
 import com.example.pfkworkspace.modules.task.application.messaging.ScanResultMessage;
+import com.example.pfkworkspace.modules.task.application.messaging.ScanVerdict;
 import com.example.pfkworkspace.modules.task.domain.Attachment;
 import com.example.pfkworkspace.modules.task.domain.AttachmentStatus;
 import com.example.pfkworkspace.modules.task.domain.Task;
@@ -162,6 +163,10 @@ public class AttachmentServiceImpl implements AttachmentService {
         attachmentRepository.findByStorageKey(scanResult.storageKey()).orElse(null);
     if (attachment == null) {
       log.warn("Attachment not found for storage key: {}", scanResult.storageKey());
+      if (scanResult.verdict() == ScanVerdict.CLEAN) {
+        log.warn("Deleting orphaned object for missing attachment: {}", scanResult.storageKey());
+        s3Service.deleteObject(scanResult.storageKey());
+      }
       return;
     }
 

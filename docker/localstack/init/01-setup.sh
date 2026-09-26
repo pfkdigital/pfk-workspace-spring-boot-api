@@ -13,11 +13,29 @@ CLEAN_BUCKET="pfk-workspace"
 UPLOADS_TOPIC_NAME="pfk-workspace-uploads"
 RESULTS_TOPIC_NAME="pfk-workspace-scan-results"
 RESULTS_QUEUE_NAME="pfk-workspace-scan-results"
+RESULTS_DLQ_NAME="pfk-workspace-scan-results-dlq"
 FUNCTION_NAME="pfk-workspace-scanner"
+MAX_RECEIVE_COUNT=3
+DLQ_RETENTION_SECONDS=1209600
+QUARANTINE_EXPIRY_DAYS=1
 
 echo ">> creating buckets"
 awslocal s3 mb "s3://${QUARANTINE_BUCKET}" --region "$REGION" || true
 awslocal s3 mb "s3://${CLEAN_BUCKET}" --region "$REGION" || true
+
+echo ">> setting ${QUARANTINE_EXPIRY_DAYS}-day expiry on ${QUARANTINE_BUCKET}"
+awslocal s3api put-bucket-lifecycle-configuration \
+  --bucket "$QUARANTINE_BUCKET" \
+  --region "$REGION" \
+  --lifecycle-configuration "{
+    \"Rules\": [{
+      \"ID\": \"expire-unscanned-uploads\",
+      \"Status\": \"Enabled\",
+      \"Filter\": {\"Prefix\": \"\"},
+      \"Expiration\": {\"Days\": ${QUARANTINE_EXPIRY_DAYS}},
+      \"AbortIncompleteMultipartUpload\": {\"DaysAfterInitiation\": ${QUARANTINE_EXPIRY_DAYS}}
+    }]
+  }"
 
 echo ">> creating SNS topics"
 UPLOADS_TOPIC_ARN=$(awslocal sns create-topic --name "$UPLOADS_TOPIC_NAME" --region "$REGION" --query TopicArn --output text)
@@ -33,10 +51,24 @@ awslocal s3api put-bucket-notification-configuration \
     }]
   }"
 
+echo ">> creating scan-results dead-letter queue"
+RESULTS_DLQ_URL=$(awslocal sqs create-queue \
+  --queue-name "$RESULTS_DLQ_NAME" \
+  --attributes "MessageRetentionPeriod=${DLQ_RETENTION_SECONDS}" \
+  --region "$REGION" --query QueueUrl --output text)
+RESULTS_DLQ_ARN=$(awslocal sqs get-queue-attributes --queue-url "$RESULTS_DLQ_URL" --attribute-names QueueArn --region "$REGION" --query Attributes.QueueArn --output text)
+
 echo ">> creating scan-results queue and subscribing it to ${RESULTS_TOPIC_ARN}"
 RESULTS_QUEUE_URL=$(awslocal sqs create-queue --queue-name "$RESULTS_QUEUE_NAME" --region "$REGION" --query QueueUrl --output text)
 RESULTS_QUEUE_ARN=$(awslocal sqs get-queue-attributes --queue-url "$RESULTS_QUEUE_URL" --attribute-names QueueArn --region "$REGION" --query Attributes.QueueArn --output text)
-# RawMessageDelivery so the queue body is the scanner's JSON, not the SNS envelope
+
+echo ">> attaching redrive policy (${MAX_RECEIVE_COUNT} attempts -> ${RESULTS_DLQ_NAME})"
+REDRIVE_POLICY=$(printf '{"deadLetterTargetArn":"%s","maxReceiveCount":"%s"}' "$RESULTS_DLQ_ARN" "$MAX_RECEIVE_COUNT")
+QUEUE_ATTRIBUTES=$(python3 -c 'import json,sys; print(json.dumps({"RedrivePolicy": sys.argv[1]}))' "$REDRIVE_POLICY")
+awslocal sqs set-queue-attributes \
+  --queue-url "$RESULTS_QUEUE_URL" \
+  --attributes "$QUEUE_ATTRIBUTES" \
+  --region "$REGION"
 awslocal sns subscribe \
   --topic-arn "$RESULTS_TOPIC_ARN" \
   --protocol sqs \
@@ -78,3 +110,5 @@ echo ">> done"
 awslocal s3 ls
 echo "uploads topic      -> $(awslocal sns list-subscriptions-by-topic --topic-arn "$UPLOADS_TOPIC_ARN" --region "$REGION" --query 'Subscriptions[].Endpoint' --output text)"
 echo "scan-results topic -> $(awslocal sns list-subscriptions-by-topic --topic-arn "$RESULTS_TOPIC_ARN" --region "$REGION" --query 'Subscriptions[].Endpoint' --output text)"
+echo "scan-results dlq   -> $(awslocal sqs get-queue-attributes --queue-url "$RESULTS_QUEUE_URL" --attribute-names RedrivePolicy --region "$REGION" --query Attributes.RedrivePolicy --output text)"
+echo "quarantine expiry  -> $(awslocal s3api get-bucket-lifecycle-configuration --bucket "$QUARANTINE_BUCKET" --region "$REGION" --query 'Rules[0].Expiration.Days' --output text) day(s)"

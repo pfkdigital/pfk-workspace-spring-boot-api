@@ -1,14 +1,14 @@
 package com.example.pfkworkspace.modules.task.api.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.UUID;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Getter
+@Setter
 public class RemoveAttachmentResponseDto {
     private UUID attachmentId;
     private UUID taskId;

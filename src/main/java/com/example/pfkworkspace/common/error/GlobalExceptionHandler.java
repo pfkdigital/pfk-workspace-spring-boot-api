@@ -19,6 +19,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -55,6 +56,12 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ApiResponse> handleMissingParam(
       MissingServletRequestParameterException ex) {
     String message = "Missing required parameter: " + ex.getParameterName();
+    return buildResponse(HttpStatus.BAD_REQUEST, message);
+  }
+
+  @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+  public ResponseEntity<ApiResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+    String message = "Invalid value for parameter: " + ex.getName();
     return buildResponse(HttpStatus.BAD_REQUEST, message);
   }
 

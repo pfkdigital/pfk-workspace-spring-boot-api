@@ -7,16 +7,14 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Base64;
 import java.util.HexFormat;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.DeleteObjectResponse;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
@@ -107,6 +105,14 @@ public class S3Service {
     return deleteFromBucket(quarantineBucket, key);
   }
 
+  public boolean existsInQuarantine(String key) {
+    return objectExists(quarantineBucket, key);
+  }
+
+  public boolean existsInBucket(String key) {
+    return objectExists(bucket, key);
+  }
+
   private DeleteObjectResponse deleteFromBucket(String targetBucket, String key) {
     DeleteObjectRequest deleteObjectRequest =
         DeleteObjectRequest.builder().bucket(targetBucket).key(key).build();
@@ -115,6 +121,21 @@ public class S3Service {
     } catch (SdkException e) {
       log.error("Failed to delete key {} from bucket {}", key, targetBucket, e);
       throw new StorageException("Unable to delete stored file", e);
+    }
+  }
+
+  private Boolean objectExists(String bucket, String key) {
+    HeadObjectRequest headObjectRequest = HeadObjectRequest.builder().bucket(bucket).key(key).build();
+    try {
+      s3Client.headObject(headObjectRequest);
+      return true;
+    }
+    catch(NoSuchKeyException e) {
+      return false;
+    }
+    catch (SdkException e) {
+      log.error("Failed to check existence of key {} in bucket {}", key, bucket, e);
+      throw new StorageException("Unable to check existence of stored file", e);
     }
   }
 }

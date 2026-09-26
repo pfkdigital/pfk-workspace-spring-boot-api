@@ -15,13 +15,13 @@ import java.time.Instant;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/{workspaceId}/{projectId}/{taskId}/attachments")
+@RequestMapping("/api/v1/workspaces")
 @RequiredArgsConstructor
 public class AttachmentController {
 
   private final AttachmentService attachmentService;
 
-  @PostMapping
+  @PostMapping("/{workspaceId}/projects/{projectId}/tasks/{taskId}/attachments")
   public ResponseEntity<ApiResponse> createAttachment(
       @PathVariable UUID workspaceId,
       @PathVariable UUID projectId,
@@ -40,7 +40,7 @@ public class AttachmentController {
     return ResponseEntity.ok(apiResponse);
   }
 
-  @GetMapping("/{attachmentId}")
+  @GetMapping("/{workspaceId}/projects/{projectId}/tasks/{taskId}/attachments/{attachmentId}")
   public ResponseEntity<ApiResponse> getAttachment(
       @PathVariable UUID workspaceId,
       @PathVariable UUID projectId,
@@ -59,7 +59,7 @@ public class AttachmentController {
     return ResponseEntity.ok(apiResponse);
   }
 
-  @DeleteMapping("/{attachmentId}")
+  @DeleteMapping("/{workspaceId}/projects/{projectId}/tasks/{taskId}/attachments/{attachmentId}")
   public ResponseEntity<ApiResponse> deleteAttachment(
       @PathVariable UUID workspaceId,
       @PathVariable UUID projectId,
